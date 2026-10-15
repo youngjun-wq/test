@@ -1,0 +1,6 @@
+{
+  "name": "보드방정 머더미스터리 : 경성의 밤",
+  "description": "보드게임 모임 보드방정을 위한 1920-30년대 경성 모던 머더미스터리 진행 도구. Web Crypto AES-GCM 암호화 밀서, 역할별 단서, GM 전용 타이머 및 시나리오 편집기 제공.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
