@@ -9,7 +9,7 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname || process.cwd(), '.'),
       },
     },
     server: {
@@ -21,7 +21,3 @@ export default defineConfig(() => {
     },
   };
 });
-export default defineConfig({
-  base: '/test/', // 리포지토리 이름과 동일하게 설정
-  // ...기존 설정
-})
