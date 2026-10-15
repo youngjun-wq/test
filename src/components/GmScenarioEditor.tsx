@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ScenarioData, CharacterData } from '../types/scenario';
 import { encryptAESGCM, hashPassword } from '../utils/crypto';
-import { Save, Copy, Check, Plus, Trash2, Download, Upload, Sparkles, RefreshCw } from 'lucide-react';
+import { GmOcrScanner } from './GmOcrScanner';
+import { Save, Copy, Check, Plus, Trash2, Download, Upload, Sparkles, RefreshCw, Camera } from 'lucide-react';
 
 interface EditableCharacter {
   id: string;
@@ -48,6 +49,10 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
 
   // GM Password setting
   const [adminPassword, setAdminPassword] = useState(currentGmPassword || 'boardbang1930');
+
+  // OCR Scanner Modal State
+  const [showOcrScanner, setShowOcrScanner] = useState(false);
+  const [ocrTargetField, setOcrTargetField] = useState<'secret' | 'public' | 'synopsis'>('secret');
 
   // Characters in editable form
   const [editableChars, setEditableChars] = useState<EditableCharacter[]>(() => {
@@ -244,6 +249,16 @@ ${editableChars.map((c) => `- [${c.name}] (${c.occupation}) : 비밀번호 "${c.
     }
   };
 
+  const handleApplyOcrText = (text: string, targetField: 'secret' | 'public' | 'synopsis') => {
+    if (targetField === 'secret') {
+      updateActiveChar('secretInfo', text);
+    } else if (targetField === 'public') {
+      updateActiveChar('testimony', text);
+    } else if (targetField === 'synopsis') {
+      setSynopsis(text);
+    }
+  };
+
   const activeChar = editableChars[activeCharIndex];
 
   return (
@@ -259,7 +274,19 @@ ${editableChars.map((c) => `- [${c.name}] (${c.occupation}) : 비밀번호 "${c.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setOcrTargetField('secret');
+              setShowOcrScanner(true);
+            }}
+            className="px-3 py-1.5 bg-[#421316] hover:bg-[#59161a] border border-[#9b2226] text-xs text-[#ffccd5] rounded-sm flex items-center gap-1.5 cursor-pointer font-bold shadow-sm"
+          >
+            <Camera className="w-3.5 h-3.5 text-[#ff8fa3]" />
+            <span>카메라 서류 판독 (OCR)</span>
+          </button>
+
           <button
             onClick={() => setShowImportModal(true)}
             className="px-3 py-1.5 bg-[#140f0c] border border-[#5a483a] text-xs text-[#c2b092] hover:text-[#f5ede1] flex items-center gap-1.5 cursor-pointer"
@@ -348,7 +375,20 @@ ${editableChars.map((c) => `- [${c.name}] (${c.occupation}) : 비밀번호 "${c.
         </div>
 
         <div className="text-xs font-sans">
-          <label className="block text-[#a89988] mb-1">시놉시스 전문</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-[#a89988]">시놉시스 전문</label>
+            <button
+              type="button"
+              onClick={() => {
+                setOcrTargetField('synopsis');
+                setShowOcrScanner(true);
+              }}
+              className="text-[11px] text-[#d4af37] hover:underline flex items-center gap-1 cursor-pointer font-serif"
+            >
+              <Camera className="w-3 h-3 text-[#d4af37]" />
+              <span>종이 시놉시스 촬영 인식 (OCR)</span>
+            </button>
+          </div>
           <textarea
             value={synopsis}
             onChange={(e) => setSynopsis(e.target.value)}
@@ -600,10 +640,23 @@ ${editableChars.map((c) => `- [${c.name}] (${c.occupation}) : 비밀번호 "${c.
 
             {/* Secret Dossier Plaintext Editor */}
             <div className="p-3 bg-[#241315] border border-[#9b2226] rounded-sm">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-[#e63946]">
-                  비공개 정보 (극비 밀서 원문 — '설정 내보내기' 시 AES-GCM으로 암호화됨)
-                </label>
+              <div className="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                <div className="flex items-center gap-2">
+                  <label className="block text-xs font-bold text-[#e63946]">
+                    비공개 정보 (극비 밀서 원문 — '설정 내보내기' 시 AES-GCM으로 암호화됨)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOcrTargetField('secret');
+                      setShowOcrScanner(true);
+                    }}
+                    className="px-2 py-0.5 bg-[#59161a] hover:bg-[#7a181d] border border-[#9b2226] text-[11px] text-[#ffccd5] rounded-none flex items-center gap-1 cursor-pointer font-serif"
+                  >
+                    <Camera className="w-3 h-3 text-[#ff8fa3]" />
+                    <span>종이 밀서 촬영 인식</span>
+                  </button>
+                </div>
                 <span className="text-[10px] text-[#ff8fa3]">
                   암호: {activeChar.password}
                 </span>
@@ -692,6 +745,16 @@ ${editableChars.map((c) => `- [${c.name}] (${c.occupation}) : 비밀번호 "${c.
             </div>
           </div>
         </div>
+      )}
+
+      {/* OCR Scanner Modal */}
+      {showOcrScanner && (
+        <GmOcrScanner
+          isOpen={showOcrScanner}
+          onClose={() => setShowOcrScanner(false)}
+          onApplyText={handleApplyOcrText}
+          currentCharacterName={activeChar?.name}
+        />
       )}
     </div>
   );
