@@ -15,6 +15,7 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
   const [showPassword, setShowPassword] = useState(false);
   const [decryptedSecret, setDecryptedSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCrackingSeal, setIsCrackingSeal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -24,6 +25,7 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
       if (decryptedSecret) {
         // Automatically close to prevent eavesdropping by nearby players
         setDecryptedSecret(null);
+        setIsCrackingSeal(false);
         setPasswordInput('');
         setErrorMessage('주변 시선 보호를 위해 화면 전환 시 밀서가 자동으로 재봉인되었습니다.');
       }
@@ -64,9 +66,16 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
         }
       }
 
+      // Trigger seal crack animation
+      setIsCrackingSeal(true);
       playSealBreakSound();
-      setDecryptedSecret(secret);
-      setErrorMessage(null);
+
+      setTimeout(() => {
+        setDecryptedSecret(secret);
+        setIsCrackingSeal(false);
+        setErrorMessage(null);
+        setIsLoading(false);
+      }, 550);
     } catch {
       playTypewriterJamSound();
       const phrases = [
@@ -76,7 +85,6 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
       ];
       const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
       setErrorMessage(randomPhrase);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -129,18 +137,41 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
           {!decryptedSecret ? (
             /* SEALED STATE */
             <div className="flex flex-col items-center text-center py-2">
-              {/* Wax Seal Graphic */}
-              <div className="relative my-4 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#800f13] via-[#a31621] to-[#470d10] border-2 border-[#b48c36]/60 flex items-center justify-center shadow-lg relative">
-                  <div className="w-18 h-18 rounded-full border border-dashed border-[#f5ede1]/40 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold font-serif text-[#f5ede1] drop-shadow-md">
-                      封
-                    </span>
-                    <span className="text-[10px] text-[#f5ede1]/80 tracking-widest uppercase font-serif mt-0.5">
-                      極秘
-                    </span>
+              {/* Wax Seal Graphic with Cracking Animation */}
+              <div className="relative my-4 flex items-center justify-center h-28">
+                {isCrackingSeal ? (
+                  /* Cracking animation: split into left & right pieces with dust particles */
+                  <div className="relative w-28 h-28 flex items-center justify-center">
+                    <div className="absolute w-14 h-24 overflow-hidden -left-1 animate-wax-crack-left">
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#800f13] via-[#a31621] to-[#470d10] border-2 border-[#b48c36]/60 flex items-center justify-center">
+                        <span className="text-2xl font-bold font-serif text-[#f5ede1] drop-shadow-md ml-12">
+                          封
+                        </span>
+                      </div>
+                    </div>
+                    <div className="absolute w-14 h-24 overflow-hidden -right-1 animate-wax-crack-right">
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#800f13] via-[#a31621] to-[#470d10] border-2 border-[#b48c36]/60 flex items-center justify-center -ml-10">
+                        <span className="text-2xl font-bold font-serif text-[#f5ede1] drop-shadow-md mr-12">
+                          封
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-[#d4af37] font-bold font-serif animate-ping">
+                      解 封
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#800f13] via-[#a31621] to-[#470d10] border-2 border-[#b48c36]/60 flex items-center justify-center shadow-lg relative hover:scale-105 transition-transform">
+                    <div className="w-18 h-18 rounded-full border border-dashed border-[#f5ede1]/40 flex flex-col items-center justify-center">
+                      <span className="text-2xl font-bold font-serif text-[#f5ede1] drop-shadow-md">
+                        封
+                      </span>
+                      <span className="text-[10px] text-[#f5ede1]/80 tracking-widest uppercase font-serif mt-0.5">
+                        極秘
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <h3 className="text-lg font-bold text-[#f5ede1] font-title mb-1">
@@ -167,7 +198,7 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
                     onChange={(e) => setPasswordInput(e.target.value)}
                     placeholder="역할 비밀번호 입력"
                     autoFocus
-                    className="w-full px-4 py-2.5 pr-10 bg-[#120f0e] border border-[#b48c36]/60 rounded-sm text-center text-sm tracking-wider text-[#f5ede1] placeholder:text-[#6a5e55] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                    className="w-full px-4 py-2.5 pr-10 bg-[#120f0d] border border-[#b48c36]/60 rounded-sm text-center text-sm tracking-wider text-[#f5ede1] placeholder:text-[#6a5e55] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                   />
                   <button
                     type="button"
@@ -188,11 +219,11 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
 
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isCrackingSeal}
                   className="w-full py-2.5 px-4 bg-gradient-to-r from-[#8b261e] via-[#a31621] to-[#8b261e] hover:brightness-110 active:scale-[0.99] text-[#f5ede1] font-medium text-sm border border-[#b48c36]/60 shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Lock className="w-4 h-4 text-[#d4af37]" />
-                  <span>{isLoading ? '인장 해제 중...' : '밀서 인장 해제 (열람)'}</span>
+                  <span>{isCrackingSeal ? '봉랍 인장 해제 중...' : isLoading ? '암호 확인 중...' : '밀서 인장 해제 (열람)'}</span>
                 </button>
               </form>
 
@@ -201,8 +232,8 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
               </div>
             </div>
           ) : (
-            /* DECRYPTED STATE - UNROLLED SCROLL / OFFICIAL LETTER */
-            <div className="animate-fade-in space-y-4">
+            /* DECRYPTED STATE - 3D UNROLLING PARCHMENT */
+            <div className="space-y-4 animate-paper-unfold">
               {/* Top Security Banner */}
               <div className="flex items-center justify-between p-2.5 bg-[#2c1214] border border-[#9b2226] text-xs">
                 <div className="flex items-center gap-2 text-[#f5ede1]">
@@ -224,8 +255,8 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
 
               {/* Vintage Letter Document */}
               <div className="relative p-5 sm:p-6 bg-[#f7f2e7] text-[#1c1917] border-2 border-[#b48c36] shadow-inner font-serif">
-                {/* Vintage Watermark & Stamp */}
-                <div className="absolute top-3 right-3 stamp-seal px-2 py-0.5 text-xs select-none pointer-events-none">
+                {/* Vintage Watermark & Stamp with Slam Animation */}
+                <div className="absolute top-3 right-3 stamp-seal px-2 py-0.5 text-xs select-none pointer-events-none animate-stamp-slam">
                   極 秘
                 </div>
 

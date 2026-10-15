@@ -5,7 +5,7 @@ import { CharacterSilhouette } from './components/CharacterSilhouette';
 import { SecretDossierModal } from './components/SecretDossierModal';
 import { DetectiveNotebook } from './components/DetectiveNotebook';
 import { GmConsole } from './components/GmConsole';
-import { isSoundEnabled, setSoundEnabled, playBrassChime } from './utils/sound';
+import { isSoundEnabled, setSoundEnabled, playBrassChime, playPageFlipSound, playStampSlamSound } from './utils/sound';
 import {
   Compass,
   FileText,
@@ -24,7 +24,59 @@ import {
   AlertTriangle,
   ArrowRight,
   HelpCircle,
+  Search,
+  X,
+  Flame,
 } from 'lucide-react';
+
+interface ClueItem {
+  id: string;
+  name: string;
+  category: string;
+  icon: string;
+  foundLocation: string;
+  description: string;
+  forensicNote: string;
+}
+
+const CRIME_SCENE_CLUES: ClueItem[] = [
+  {
+    id: 'clue_wine',
+    name: '깨진 와인병 파편',
+    category: '둔기 흉기',
+    icon: '🍷',
+    foundLocation: '귀빈실 원형 마호가니 탁자 아래',
+    description: '1925년산 프랑스 보르도 와인병. 병목 부위가 날카롭게 깨져 있으며 피와 머리카락 일부가 묻어 있다.',
+    forensicNote: '피해자의 뒤통수 타박상과 일치. 정면에서 가격당한 것이 아니라 대화 중 기습당한 것으로 보임.',
+  },
+  {
+    id: 'clue_handkerchief',
+    name: '붉은 루즈가 번진 비단 손수건',
+    category: '유류품',
+    icon: '💄',
+    foundLocation: '소파 등받이 쿠션 틈새',
+    description: '고급 프랑스제 장미 향수 냄새가 진하게 배어 있는 연분홍 실크 손수건. 모서리에 영문 이니셜 "C.R"이 정교하게 자수되어 있다.',
+    forensicNote: '가수 강채령의 분장실 화장대에서 사용되는 립스틱 색상과 동일함.',
+  },
+  {
+    id: 'clue_telegram',
+    name: '반쯤 타다 남은 전보 용지',
+    category: '문서 증거',
+    icon: '📜',
+    foundLocation: '벽난로 재 속',
+    description: '모서리가 불에 탔으나 일부 글귀 판독 가능: "...상해(上海) 발송 자금 확인... 순종 하사 어보(御寶) 양도 담판... 11월 4일 낙원구락부 2층..."',
+    forensicNote: '피해자 배상호가 사망 직전 누군가와 밀거래 협상을 진행 중이었음을 입증함.',
+  },
+  {
+    id: 'clue_dagger',
+    name: '피 묻은 왕실 은장도 (치명적 흉기)',
+    category: '직접 살해 흉기',
+    icon: '🗡️',
+    foundLocation: '피해자의 좌측 심장 부위',
+    description: '정교한 매화 문양이 음각된 순은제 장도. 한약재를 정밀 절단하거나 수술용으로 사용되는 침구사의 도구와 형태가 흡사하다.',
+    forensicNote: '심장을 단번에 관통한 치명타. 은장도 손잡이에 지문은 닦여 있으나 약방 특유의 박하·백지 향기가 미세하게 감지됨.',
+  },
+];
 
 export default function App() {
   const [scenario, setScenario] = useState<ScenarioData>(() => {
@@ -42,6 +94,9 @@ export default function App() {
   // Player tabs: 'synopsis', 'characters', 'notebook'
   const [playerTab, setPlayerTab] = useState<'synopsis' | 'characters' | 'notebook'>('synopsis');
 
+  // Selected clue for inspection modal
+  const [selectedClue, setSelectedClue] = useState<ClueItem | null>(null);
+
   // Character secret dossier modal
   const [selectedCharForSecret, setSelectedCharForSecret] = useState<CharacterData | null>(null);
 
@@ -55,6 +110,11 @@ export default function App() {
     const next = !soundOn;
     setSoundOn(next);
     setSoundEnabled(next);
+  };
+
+  const handleTabChange = (tab: 'synopsis' | 'characters' | 'notebook') => {
+    setPlayerTab(tab);
+    playPageFlipSound();
   };
 
   const handleUpdateScenario = (updated: ScenarioData) => {
@@ -75,16 +135,23 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-[#e8dfcc] font-serif flex flex-col selection:bg-[#8b261e] selection:text-[#fbf9f5]">
+    <div className="min-h-screen text-[#e8dfcc] font-serif flex flex-col selection:bg-[#8b261e] selection:text-[#fbf9f5] relative overflow-x-hidden">
+      {/* Ambient Gaslamp Glow in corners */}
+      <div className="fixed top-0 left-0 w-64 h-64 bg-radial from-[#d4af37]/10 via-[#d4af37]/2 to-transparent pointer-events-none z-0 animate-lamp-flicker" />
+      <div className="fixed bottom-0 right-0 w-80 h-80 bg-radial from-[#800f13]/15 via-[#800f13]/3 to-transparent pointer-events-none z-0 animate-pulse" />
+
       {/* GLOBAL HEADER BAR - Vintage Newspaper Masthead Style */}
       <header className="border-b border-[#b48c36]/40 bg-[#161210]/95 sticky top-0 z-40 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
           {/* Brand Wordmark */}
           <button
-            onClick={() => setCurrentView('cover')}
+            onClick={() => {
+              setCurrentView('cover');
+              playPageFlipSound();
+            }}
             className="flex items-center gap-2.5 hover:opacity-90 transition-opacity text-left cursor-pointer group"
           >
-            <div className="w-8 h-8 rounded-sm bg-[#8b261e] border border-[#b48c36] flex items-center justify-center text-[#f5ede1] font-bold text-xs shadow-md">
+            <div className="w-8 h-8 rounded-sm bg-[#8b261e] border border-[#b48c36] flex items-center justify-center text-[#f5ede1] font-bold text-xs shadow-md group-hover:scale-105 transition-transform">
               號外
             </div>
             <div>
@@ -113,7 +180,10 @@ export default function App() {
 
             {currentView === 'gm' ? (
               <button
-                onClick={() => setCurrentView('player')}
+                onClick={() => {
+                  setCurrentView('player');
+                  playPageFlipSound();
+                }}
                 className="px-3 py-1.5 bg-[#251e18] hover:bg-[#342a22] border border-[#b48c36]/60 text-[#f5ede1] text-xs font-semibold rounded-sm transition-all cursor-pointer"
               >
                 탐정 화면으로
@@ -124,7 +194,7 @@ export default function App() {
                   setCurrentView('gm');
                   playBrassChime();
                 }}
-                className="px-3 py-1.5 bg-[#8b261e] hover:bg-[#a31621] border border-[#b48c36] text-[#f5ede1] text-xs font-bold rounded-sm shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-[#8b261e] hover:bg-[#a31621] border border-[#b48c36] text-[#f5ede1] text-xs font-bold rounded-sm shadow-md transition-all cursor-pointer flex items-center gap-1.5 hover:scale-105"
               >
                 <Lock className="w-3.5 h-3.5 text-[#d4af37]" />
                 <span>GM 입장</span>
@@ -135,15 +205,15 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-6 z-10">
         {/* ========================================================
             1. COVER VIEW (첫 화면: 1931년 경성일보 호외 1면)
            ======================================================== */}
         {currentView === 'cover' && (
-          <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
-            {/* Vintage Newspaper Extra Front Page Banner */}
+          <div className="space-y-6 max-w-3xl mx-auto">
+            {/* Vintage Newspaper Extra Front Page Banner with Drop Animation */}
             <div
-              className="p-6 sm:p-10 bg-[#f7f2e7] text-[#1c1917] border-4 double border-[#2b241e] shadow-2xl relative"
+              className="p-6 sm:p-10 bg-[#f7f2e7] text-[#1c1917] border-4 double border-[#2b241e] shadow-2xl relative animate-newspaper-drop"
               style={{
                 boxShadow: '0 10px 40px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,0,0,0.06)',
               }}
@@ -152,7 +222,7 @@ export default function App() {
               <div className="absolute top-2 left-2 text-[10px] text-[#7a6a5d] font-deco">
                 VOL. 1931 · NO. 1104
               </div>
-              <div className="absolute top-2 right-2 stamp-seal px-2 py-0.5 text-xs">
+              <div className="absolute top-2 right-2 stamp-seal px-2.5 py-0.5 text-xs animate-stamp-slam">
                 特別 號外
               </div>
 
@@ -175,7 +245,7 @@ export default function App() {
 
               {/* Headline Story */}
               <div className="my-6 text-center">
-                <div className="inline-block px-3 py-1 bg-[#800f13] text-[#f5ede1] font-bold text-xs tracking-wider mb-3 rounded-none uppercase">
+                <div className="inline-block px-3 py-1 bg-[#800f13] text-[#f5ede1] font-bold text-xs tracking-wider mb-3 rounded-none uppercase shadow-sm">
                   殺人事件 速報
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-bold font-title text-[#1c1917] leading-snug tracking-tight">
@@ -321,7 +391,7 @@ export default function App() {
               {/* Navigation Tabs */}
               <div className="flex flex-wrap gap-2 text-xs sm:text-sm font-semibold">
                 <button
-                  onClick={() => setPlayerTab('synopsis')}
+                  onClick={() => handleTabChange('synopsis')}
                   className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
                     playerTab === 'synopsis'
                       ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
@@ -333,7 +403,7 @@ export default function App() {
                 </button>
 
                 <button
-                  onClick={() => setPlayerTab('characters')}
+                  onClick={() => handleTabChange('characters')}
                   className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
                     playerTab === 'characters'
                       ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
@@ -345,7 +415,7 @@ export default function App() {
                 </button>
 
                 <button
-                  onClick={() => setPlayerTab('notebook')}
+                  onClick={() => handleTabChange('notebook')}
                   className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
                     playerTab === 'notebook'
                       ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
@@ -378,7 +448,7 @@ export default function App() {
                 {/* Victim & Scene Profile */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Victim Dossier */}
-                  <div className="p-5 bg-[#231816] border border-[#9b2226]/50 rounded-sm space-y-3">
+                  <div className="p-5 bg-[#231816] border border-[#9b2226]/50 rounded-sm space-y-3 shadow-md hover:border-[#e63946] transition-colors">
                     <div className="flex items-center justify-between border-b border-[#9b2226]/30 pb-2">
                       <div className="flex items-center gap-2 text-[#e63946]">
                         <AlertTriangle className="w-4 h-4" />
@@ -386,7 +456,7 @@ export default function App() {
                           피해자 감식 보고서
                         </h4>
                       </div>
-                      <span className="text-[11px] px-1.5 py-0.2 border border-[#9b2226] text-[#ff8fa3]">
+                      <span className="text-[11px] px-2 py-0.5 border border-[#9b2226] text-[#ff8fa3] bg-[#9b2226]/20 font-bold">
                         사망 확인
                       </span>
                     </div>
@@ -408,7 +478,7 @@ export default function App() {
                   </div>
 
                   {/* Crime Scene Dossier */}
-                  <div className="p-5 bg-[#1b1714] border border-[#b48c36]/40 rounded-sm space-y-3">
+                  <div className="p-5 bg-[#1b1714] border border-[#b48c36]/40 rounded-sm space-y-3 shadow-md">
                     <div className="flex items-center justify-between border-b border-[#3d3128] pb-2">
                       <div className="flex items-center gap-2 text-[#d4af37]">
                         <Compass className="w-4 h-4" />
@@ -416,7 +486,7 @@ export default function App() {
                           사건 현장 (완전 밀실 상태)
                         </h4>
                       </div>
-                      <span className="text-[11px] px-1.5 py-0.2 border border-[#b48c36] text-[#d4af37]">
+                      <span className="text-[11px] px-2 py-0.5 border border-[#b48c36] text-[#d4af37] bg-[#27201b] font-bold">
                         현장 보존
                       </span>
                     </div>
@@ -427,10 +497,59 @@ export default function App() {
                         {scenario.victim.crimeScene}
                       </div>
                       <div className="leading-relaxed">
-                        <strong className="text-[#d4af37]">현장 단서:</strong>{' '}
-                        테이블 위 깨진 와인병 파편, 붉은 루즈가 번진 프랑스제 향수 냄새의 비단 손수건, 벽난로 재 속의 탄 전보 조각, 바닥의 은장도 자상 혈흔.
+                        <strong className="text-[#d4af37]">밀실 특징:</strong>{' '}
+                        2층 귀빈실의 목재 출입문과 외부 창문 2곳 모두 안쪽에서 단단히 빗장이 걸려 있었음. 외부 침입 흔적 전무.
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Interactive Clues Gallery (Click to Inspect) */}
+                <div className="p-5 bg-[#1a1411] border border-[#b48c36]/50 rounded-sm space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between border-b border-[#3d3128] pb-2">
+                    <div className="flex items-center gap-2 text-[#d4af37]">
+                      <Search className="w-4 h-4" />
+                      <h4 className="font-bold text-sm font-title text-[#f5ede1]">
+                        현장 압수 증거물 정밀 감식 (클릭하여 확대경 검사)
+                      </h4>
+                    </div>
+                    <span className="text-[11px] text-[#a89988]">
+                      단서 4종 감식 완료
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
+                    {CRIME_SCENE_CLUES.map((clue) => (
+                      <button
+                        key={clue.id}
+                        onClick={() => {
+                          setSelectedClue(clue);
+                          playStampSlamSound();
+                        }}
+                        className="p-3 bg-[#231b16] border border-[#44362b] hover:border-[#d4af37] text-left rounded-sm transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer flex items-start gap-3 group"
+                      >
+                        <div className="w-10 h-10 rounded bg-[#140f0c] border border-[#b48c36]/40 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                          {clue.icon}
+                        </div>
+                        <div className="flex-1 min-w-0 text-xs">
+                          <div className="flex items-center justify-between gap-1 mb-0.5">
+                            <span className="font-bold text-[#f5ede1] truncate group-hover:text-[#d4af37] transition-colors">
+                              {clue.name}
+                            </span>
+                            <span className="text-[10px] text-[#a89988] shrink-0 border border-[#44362b] px-1 rounded-none">
+                              {clue.category}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#b8a995] line-clamp-1">
+                            {clue.description}
+                          </p>
+                          <div className="mt-1 text-[10px] text-[#d4af37] flex items-center gap-1 font-serif">
+                            <Search className="w-3 h-3" />
+                            <span>상세 감식 소견 보기 ➔</span>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -623,6 +742,82 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* CLUE INSPECTION MODAL */}
+      {selectedClue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div
+            className="relative w-full max-w-md bg-[#1d1612] border-2 border-[#b48c36] p-5 sm:p-6 rounded-sm shadow-2xl animate-newspaper-drop font-serif"
+            style={{
+              boxShadow: '0 0 40px rgba(0,0,0,0.9), inset 0 0 50px rgba(180, 140, 54, 0.1)',
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#b48c36]/40">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl p-1 bg-[#120f0c] border border-[#b48c36]/40 rounded">
+                  {selectedClue.icon}
+                </span>
+                <div>
+                  <span className="text-[10px] text-[#d4af37] tracking-wider uppercase font-sans">
+                    압수 증거물 번호 #{selectedClue.id.replace('clue_', '').toUpperCase()}
+                  </span>
+                  <h4 className="font-bold text-base text-[#f5ede1] font-title">
+                    {selectedClue.name}
+                  </h4>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedClue(null)}
+                className="text-[#a89988] hover:text-[#f5ede1] p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Clue Details */}
+            <div className="space-y-3 text-xs text-[#d8c8b4] font-sans">
+              <div className="p-2.5 bg-[#140f0c] border border-[#3d3128] rounded-sm">
+                <span className="text-[#a89988] block text-[11px] mb-0.5 font-serif">
+                  【발견 장소】
+                </span>
+                <span className="text-[#f5ede1] font-bold">
+                  {selectedClue.foundLocation}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-[#a89988] block text-[11px] mb-0.5 font-serif">
+                  【외관 특징】
+                </span>
+                <p className="leading-relaxed bg-[#241c17] p-2.5 border border-[#44362b] rounded-sm text-[#e8dfcc]">
+                  {selectedClue.description}
+                </p>
+              </div>
+
+              <div className="p-3 bg-[#2a1215] border border-[#9b2226]/60 rounded-sm">
+                <span className="text-[#ff8fa3] block text-[11px] mb-1 font-bold font-serif flex items-center gap-1">
+                  <Search className="w-3.5 h-3.5" />
+                  <span>탐정 및 감식반의 정밀 소견</span>
+                </span>
+                <p className="leading-relaxed text-[#fcd5ce]">
+                  {selectedClue.forensicNote}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-[#3d3128] flex justify-end">
+              <button
+                onClick={() => setSelectedClue(null)}
+                className="px-4 py-1.5 bg-[#8b261e] border border-[#b48c36] text-xs font-bold text-[#f5ede1] hover:brightness-110 cursor-pointer"
+              >
+                확인 및 닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SECRET DOSSIER MODAL */}
       {selectedCharForSecret && (

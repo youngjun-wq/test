@@ -212,8 +212,65 @@ export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 60 }) => {
               : '0 0 30px rgba(0,0,0,0.8), inset 0 0 30px rgba(180, 140, 54, 0.15)',
           }}
         >
-          {/* Circular Hour Ticks */}
+          {/* Circular Hour Ticks & Vintage Roman Numbers */}
           <div className="absolute inset-2 rounded-full border border-dashed border-[#b48c36]/30 pointer-events-none" />
+
+          {/* Background Rotating Watch Gears */}
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full pointer-events-none opacity-20">
+            {/* Gear 1 (large clockwise) */}
+            <svg
+              viewBox="0 0 100 100"
+              className={`w-48 h-48 sm:w-56 sm:h-56 text-[#b48c36] fill-current -top-4 -left-4 absolute ${
+                isRunning ? 'animate-gear-spin' : ''
+              }`}
+            >
+              <circle cx="50" cy="50" r="32" fill="none" stroke="currentColor" strokeWidth="4" />
+              {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+                <rect
+                  key={deg}
+                  x="48"
+                  y="10"
+                  width="4"
+                  height="10"
+                  transform={`rotate(${deg} 50 50)`}
+                  fill="currentColor"
+                />
+              ))}
+              <circle cx="50" cy="50" r="12" fill="none" stroke="currentColor" strokeWidth="3" />
+            </svg>
+
+            {/* Gear 2 (small counter-clockwise) */}
+            <svg
+              viewBox="0 0 100 100"
+              className={`w-36 h-36 sm:w-44 sm:h-44 text-[#800f13] fill-current -bottom-2 -right-2 absolute ${
+                isRunning ? 'animate-gear-spin-reverse' : ''
+              }`}
+            >
+              <circle cx="50" cy="50" r="26" fill="none" stroke="currentColor" strokeWidth="3" />
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                <rect
+                  key={deg}
+                  x="48"
+                  y="16"
+                  width="4"
+                  height="9"
+                  transform={`rotate(${deg} 50 50)`}
+                  fill="currentColor"
+                />
+              ))}
+            </svg>
+          </div>
+
+          {/* Ticking Second Hand (moves each second when running) */}
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none transition-transform duration-300 ease-out"
+            style={{
+              transform: `rotate(${(seconds * 6)}deg)`,
+            }}
+          >
+            <div className="w-0.5 h-20 sm:h-24 bg-gradient-to-t from-transparent via-[#d4af37] to-[#e63946] absolute bottom-1/2 origin-bottom shadow-sm" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#d4af37] border border-[#140f0c] absolute z-20" />
+          </div>
 
           {/* Time Digits */}
           <div className="flex flex-col items-center justify-center z-10 text-center">
@@ -221,7 +278,9 @@ export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 60 }) => {
               REMAINING TIME
             </span>
             <div
-              className={`font-deco font-bold tracking-tight ${
+              className={`font-deco font-bold tracking-tight transition-transform ${
+                isRunning && remainingSeconds % 2 === 0 ? 'scale-[1.02]' : 'scale-100'
+              } ${
                 isFullscreen ? 'text-7xl sm:text-8xl' : 'text-5xl sm:text-6xl'
               } ${isUrgent ? 'text-[#ff4d6d]' : 'text-[#f5ede1]'}`}
             >

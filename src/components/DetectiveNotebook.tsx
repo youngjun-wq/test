@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CharacterData } from '../types/scenario';
-import { BookOpen, CheckCircle, HelpCircle, AlertCircle, Save, Trash2 } from 'lucide-react';
+import { playStampSlamSound } from '../utils/sound';
+import { BookOpen, CheckCircle, HelpCircle, AlertCircle, Save, Trash2, Stamp } from 'lucide-react';
 
 interface DetectiveNotebookProps {
   characters: CharacterData[];
@@ -16,6 +17,8 @@ export const DetectiveNotebook: React.FC<DetectiveNotebookProps> = ({ characters
       return {};
     }
   });
+
+  const [lastStampedId, setLastStampedId] = useState<string | null>(null);
 
   const [notes, setNotes] = useState<string>(() => {
     try {
@@ -51,6 +54,8 @@ export const DetectiveNotebook: React.FC<DetectiveNotebookProps> = ({ characters
     const current = suspectStatus[id] || 'neutral';
     const nextIdx = (order.indexOf(current) + 1) % order.length;
     setSuspectStatus((prev) => ({ ...prev, [id]: order[nextIdx] }));
+    setLastStampedId(id);
+    playStampSlamSound();
   };
 
   const handleClearNotes = () => {
@@ -61,17 +66,17 @@ export const DetectiveNotebook: React.FC<DetectiveNotebookProps> = ({ characters
   };
 
   return (
-    <div className="bg-[#1f1915] border border-[#b48c36]/40 p-4 sm:p-5 rounded-sm text-[#e8dfcc] font-serif shadow-lg">
+    <div className="bg-[#1f1915] border border-[#b48c36]/40 p-4 sm:p-5 rounded-sm text-[#e8dfcc] font-serif shadow-lg animate-fade-in">
       <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#b48c36]/30">
         <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-[#d4af37]" />
           <h3 className="font-bold text-base text-[#f5ede1] tracking-wide">
-            탐정 수사 수첩 (개인 메모)
+            탐정 수사 수첩 (개인 메모 & 용의자 판별)
           </h3>
         </div>
         <div className="flex items-center gap-2 text-xs">
           {savedFeedback && (
-            <span className="text-emerald-400 text-[11px] flex items-center gap-1">
+            <span className="text-emerald-400 text-[11px] flex items-center gap-1 animate-pulse">
               <Save className="w-3 h-3" /> 자동 저장됨
             </span>
           )}
@@ -88,38 +93,62 @@ export const DetectiveNotebook: React.FC<DetectiveNotebookProps> = ({ characters
       {/* Suspect Matrix Chips */}
       <div className="mb-4">
         <div className="text-xs text-[#b8a995] mb-2 flex items-center justify-between">
-          <span>인물별 혐의 판단 (클릭하여 상태 변경)</span>
+          <span className="flex items-center gap-1">
+            <Stamp className="w-3.5 h-3.5 text-[#d4af37]" />
+            <span>인물별 낙관 도장 찍기 (클릭하여 변경)</span>
+          </span>
           <span className="text-[10px] text-[#8c7e73]">보통 ➔ 의심 ➔ 유력용의자 ➔ 결백</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           {characters.map((char) => {
             const status = suspectStatus[char.id] || 'neutral';
+            const isJustStamped = lastStampedId === char.id;
             let badgeStyle = 'bg-[#28211b] border-[#57483b] text-[#c2b092]';
             let statusText = '판단 보류';
+            let stampHancha = '';
+            let stampColor = '';
 
             if (status === 'suspicious') {
               badgeStyle = 'bg-[#5c3716]/40 border-[#b48c36] text-[#e0a842]';
               statusText = '의심스러움';
+              stampHancha = '疑惑';
+              stampColor = 'border-[#e0a842] text-[#e0a842]';
             } else if (status === 'culprit') {
               badgeStyle = 'bg-[#7a141b]/50 border-[#e63946] text-[#ff8fa3] font-bold';
               statusText = '유력 용의자';
+              stampHancha = '容疑';
+              stampColor = 'border-[#e63946] text-[#e63946]';
             } else if (status === 'innocent') {
               badgeStyle = 'bg-[#183a24]/40 border-emerald-600 text-emerald-400';
               statusText = '결백 추정';
+              stampHancha = '潔白';
+              stampColor = 'border-emerald-500 text-emerald-400';
             }
 
             return (
               <button
                 key={char.id}
                 onClick={() => toggleStatus(char.id)}
-                className={`p-2 rounded-sm border text-left text-xs transition-all flex flex-col justify-between cursor-pointer ${badgeStyle}`}
+                className={`relative p-2.5 rounded-sm border text-left text-xs transition-all flex flex-col justify-between cursor-pointer overflow-hidden active:scale-95 hover:border-[#d4af37] ${badgeStyle}`}
               >
-                <div className="font-bold truncate text-[#f5ede1]">{char.name}</div>
-                <div className="text-[10px] mt-1 flex items-center justify-between opacity-90">
+                {/* Stamp Impression Animation */}
+                {stampHancha && (
+                  <div
+                    key={`${char.id}-${status}`}
+                    className={`absolute top-1 right-1 px-1.5 py-0.5 border-2 text-[10px] font-bold font-serif select-none pointer-events-none transform -rotate-12 ${stampColor} ${
+                      isJustStamped ? 'animate-stamp-slam' : ''
+                    }`}
+                  >
+                    {stampHancha}
+                  </div>
+                )}
+
+                <div className="font-bold truncate text-[#f5ede1] z-10">{char.name}</div>
+                <div className="text-[10px] mt-2 flex items-center justify-between opacity-90 z-10">
                   <span>{statusText}</span>
-                  {status === 'culprit' && <AlertCircle className="w-3 h-3 text-[#e63946]" />}
-                  {status === 'innocent' && <CheckCircle className="w-3 h-3 text-emerald-400" />}
-                  {status === 'suspicious' && <HelpCircle className="w-3 h-3 text-[#d4af37]" />}
+                  {status === 'culprit' && <AlertCircle className="w-3.5 h-3.5 text-[#e63946]" />}
+                  {status === 'innocent' && <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />}
+                  {status === 'suspicious' && <HelpCircle className="w-3.5 h-3.5 text-[#d4af37]" />}
                 </div>
               </button>
             );
