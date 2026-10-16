@@ -18,11 +18,13 @@ import {
   fetchLatestState,
   PHASE_VISIBILITY_EVENT,
 } from '../utils/phaseStorage';
+import { getRoomShareLink, getActiveRoomId } from '../utils/mqttSync';
 import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
   Volume2,
+  Share2,
   Clock,
   RotateCw,
   AlertTriangle,
@@ -143,6 +145,27 @@ export const PhaseStoryBook: React.FC<PhaseStoryBookProps> = ({
     playBrassChime();
   };
 
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleShareLink = async () => {
+    const link = getRoomShareLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      playBrassChime();
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = link;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
   const handleResetVisibility = () => {
     if (confirm('오프닝과 1장 이동 단계만 남기고 이후 모든 단계를 다시 잠그시겠습니까?')) {
       const updated = resetPhaseVisibility();
@@ -209,6 +232,20 @@ export const PhaseStoryBook: React.FC<PhaseStoryBookProps> = ({
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>초기화</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShareLink}
+                className={`px-2.5 py-1.5 rounded-xs flex items-center gap-1 cursor-pointer transition-all border font-semibold ${
+                  copiedLink
+                    ? 'bg-emerald-900 border-emerald-400 text-emerald-200'
+                    : 'bg-[#1e271c] hover:bg-[#2c3929] text-emerald-300 border-emerald-600/70'
+                }`}
+                title="스마트폰 탐정들이 같은 방으로 바로 들어올 수 있는 초대 링크를 복사합니다"
+              >
+                <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{copiedLink ? '초대 링크 복사됨!' : '모바일 초대 링크'}</span>
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { GAME_PHASES } from '../data/phasesData';
+import { publishMqttPhaseVisibility, initMqttCrossDeviceSync } from './mqttSync';
 
 export type PhaseVisibilityMap = Record<string, boolean>;
 
@@ -63,7 +64,14 @@ export function savePhaseVisibility(map: PhaseVisibilityMap, broadcastToServer: 
     window.dispatchEvent(new CustomEvent(PHASE_VISIBILITY_EVENT, { detail: map }));
 
     if (broadcastToServer) {
-      // Asynchronously send to server so all other player devices receive it immediately
+      // 1. High-speed Cloud Broker Broadcast (bypasses container/proxy cookies)
+      try {
+        publishMqttPhaseVisibility(map);
+      } catch (e) {
+        console.warn('MQTT broadcast failed:', e);
+      }
+
+      // 2. Asynchronously send to server backup
       fetch('/api/game-state/phase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -208,6 +216,9 @@ export function initCrossDeviceSync(): () => void {
   if (isSyncInitialized) return () => {};
   isSyncInitialized = true;
 
+  // 0. Cloud Broker Sync (EMQX Public WSS) - 100% reliable cross-device & mobile sync
+  const cleanupMqtt = initMqttCrossDeviceSync();
+
   // 1. Initial REST fetch
   fetchLatestState();
 
@@ -285,6 +296,9 @@ export function initCrossDeviceSync(): () => void {
     }
     window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
     window.removeEventListener('focus', handleVisibilityOrFocus);
+    if (cleanupMqtt) {
+      try { cleanupMqtt(); } catch {}
+    }
     isSyncInitialized = false;
   };
 }

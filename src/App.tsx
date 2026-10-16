@@ -6,6 +6,8 @@ import { SecretDossierModal } from './components/SecretDossierModal';
 import { DetectiveNotebook } from './components/DetectiveNotebook';
 import { GmConsole } from './components/GmConsole';
 import { PhaseStoryBook } from './components/PhaseStoryBook';
+import { RoomSyncModal } from './components/RoomSyncModal';
+import { getActiveRoomId, DEFAULT_ROOM_ID } from './utils/mqttSync';
 import { isSoundEnabled, setSoundEnabled, playBrassChime, playPageFlipSound, playStampSlamSound } from './utils/sound';
 import { initCrossDeviceSync, fetchLatestState, SERVER_SYNC_STATUS_EVENT } from './utils/phaseStorage';
 import {
@@ -15,6 +17,7 @@ import {
   BookOpen,
   Lock,
   Wifi,
+  Radio,
   Volume2,
   VolumeX,
   ShieldAlert,
@@ -130,13 +133,18 @@ export default function App() {
   // Sound toggle
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
 
-  // Real-time cross-device sync status
+  // Real-time cross-device sync status & Room modal
   const [syncStatus, setSyncStatus] = useState<{ connected: boolean; mode: string }>({ connected: true, mode: 'init' });
+  const [isRoomModalOpen, setIsRoomModalOpen] = useState<boolean>(false);
+  const [activeRoom, setActiveRoom] = useState<string>(() => getActiveRoomId());
 
   useEffect(() => {
     const cleanup = initCrossDeviceSync();
     const handleSyncStatus = (e: any) => {
-      if (e.detail) setSyncStatus(e.detail);
+      if (e.detail) {
+        setSyncStatus(e.detail);
+        if (e.detail.roomId) setActiveRoom(e.detail.roomId);
+      }
     };
     window.addEventListener(SERVER_SYNC_STATUS_EVENT, handleSyncStatus);
     return () => {
@@ -207,35 +215,40 @@ export default function App() {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Real-time Multi-device Sync Badge & Button */}
             <button
-              onClick={async () => {
-                const ok = await fetchLatestState();
-                if (ok) playBrassChime();
+              onClick={() => {
+                setIsRoomModalOpen(true);
+                playBrassChime();
               }}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[11px] transition-all active:scale-95 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[11px] transition-all active:scale-95 cursor-pointer shadow-xs ${
                 syncStatus.connected
-                  ? 'bg-[#1b261b] border-emerald-700/60 text-emerald-300 hover:bg-[#223522]'
+                  ? 'bg-[#142316] border-emerald-600/70 text-emerald-300 hover:bg-[#1d3320]'
                   : 'bg-[#291e14] border-amber-700/60 text-amber-300 hover:bg-[#38281b]'
               }`}
-              title="클릭/터치 시 서버로부터 최신 잠금/진행 상태를 즉시 동기화합니다."
+              title="클릭하여 모바일 실시간 연동 설정 및 스마트폰 초대 링크를 확인합니다."
             >
               <span
-                className={`w-1.5 h-1.5 rounded-full ${
+                className={`w-2 h-2 rounded-full ${
                   syncStatus.connected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
                 }`}
               />
-              <span className="font-sans">
+              <span className="font-sans font-medium flex items-center gap-1">
                 {syncStatus.connected ? (
                   <>
-                    <span className="hidden sm:inline">다중기기 실시간 연동</span>
-                    <span className="sm:hidden">실시간 연동</span>
+                    <span className="hidden sm:inline">
+                      실시간 연동 ({activeRoom === DEFAULT_ROOM_ID ? '기본방' : activeRoom})
+                    </span>
+                    <span className="sm:hidden">
+                      연동 ({activeRoom === DEFAULT_ROOM_ID ? '기본방' : activeRoom})
+                    </span>
                   </>
                 ) : (
                   <>
-                    <span className="hidden sm:inline">터치하여 동기화</span>
-                    <span className="sm:hidden">재동기화</span>
+                    <span className="hidden sm:inline">연결 설정 (터치)</span>
+                    <span className="sm:hidden">연결 설정</span>
                   </>
                 )}
               </span>
+              <Radio className="w-3 h-3 opacity-70 ml-0.5" />
             </button>
 
             <button
@@ -958,6 +971,12 @@ export default function App() {
           onClose={() => setSelectedCharForSecret(null)}
         />
       )}
+
+      {/* REAL-TIME ROOM SYNC MODAL */}
+      <RoomSyncModal
+        isOpen={isRoomModalOpen}
+        onClose={() => setIsRoomModalOpen(false)}
+      />
     </div>
   );
 }
