@@ -60,21 +60,27 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
         <div className="flex items-center gap-2 mb-2 text-[#e63946]">
           <ShieldAlert className="w-5 h-5 shrink-0" />
           <h4 className="font-bold text-sm font-title text-[#f5ede1]">
-            GM 마스터 브리핑 : 사건의 전모 & 핵심 갈등 구조
+            GM 마스터 브리핑 : [탐정금지구역] 6인 수사 구조 & 핵심 단서
           </h4>
         </div>
         <div className="text-xs text-[#d8c8b4] space-y-1.5 leading-relaxed font-sans">
           <p>
-            • <strong className="text-[#d4af37]">피해자:</strong> 배상호 (사채업자이자 친일 골동품상, 여동생 원수, 구락부 압류 위협, 독립운동 명부 탈취범)
+            • <strong className="text-[#d4af37]">피해자:</strong> 개구리 가면의 명탐정 가와즈야 세이지로 (경찰 수사 고문, 흉악범죄 예언서를 남기고 서재 안락의자에서 나이프에 찔려 피살).
           </p>
           <p>
-            • <strong className="text-[#d4af37]">밀실 트릭:</strong> 지배인 민우현이 시신을 발견 후 구락부 파산을 막기 위해 <strong>특수 철사</strong>로 안쪽 걸쇠를 채워 밀실 조작.
+            • <strong className="text-[#d4af37]">조 편성 (1장):</strong> 마차조 (베테랑 형사, 미모의 괴도, 청소부) / 기차조 (작가, 전직 기자, 조수).
           </p>
           <p>
-            • <strong className="text-[#d4af37]">흉기와 독극물:</strong> 한의사 송백화가 독살을 기도(독약 투여). 그러나 여가수 강채령이 와인병으로 가격 후 탈출, 또 다른 자가 송백화 가방에서 훔친 은장도로 가슴을 찔러 치명상을 입힘.
+            • <strong className="text-[#d4af37]">면담 순서 (막간②):</strong> 6:00 괴도 → 6:30 형사 → 7:00 조수 → 7:30 전직 기자 → 8:00 작가 → 8:30 청소부.
           </p>
           <p>
-            • <strong className="text-[#d4af37]">특무 수사관:</strong> 고바야시 켄지는 총독부 형사(사토 켄이치)로 사라진 황실 어보 추적 중.
+            • <strong className="text-[#d4af37]">사건 단서 메모:</strong> K (까마귀 사건) / R (후시미 리쓰코 사건) / M (오오기 마리코 사건).
+          </p>
+          <p>
+            • <strong className="text-[#d4af37]">비밀 상자 & 작은 열쇠:</strong> 막간③ 이후 「작은 열쇠」 카드를 가진 플레이어가 상자를 열겠다고 선언하면 전원 편지 및 최종 목적 공개!
+          </p>
+          <p>
+            • <strong className="text-[#d4af37]">최종 추리 특수 역할:</strong> 전직 기자 & 청소부의 [#표 목적], 작가의 구두 추리(3-A 또는 3-B) 발표 후 일제 지목 투표.
           </p>
         </div>
       </div>

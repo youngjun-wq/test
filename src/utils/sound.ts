@@ -229,3 +229,40 @@ export function playPageFlipSound() {
 
   noise.start(now);
 }
+
+/**
+ * Vintage Gramophone wind-up & vinyl needle crackle
+ */
+export function playGramophoneSound() {
+  if (!isSoundEnabled()) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const now = ctx.currentTime;
+  // Crackle noise
+  const bufferSize = ctx.sampleRate * 0.4;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    const isPop = Math.random() < 0.008;
+    data[i] = isPop ? (Math.random() * 2 - 1) * 0.8 : (Math.random() * 2 - 1) * 0.05;
+  }
+
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1500, now);
+  filter.Q.setValueAtTime(2.0, now);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+
+  noise.start(now);
+}

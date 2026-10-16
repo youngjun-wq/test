@@ -4,7 +4,8 @@ import { verifyPassword } from '../utils/crypto';
 import { GmTimer } from './GmTimer';
 import { GmSecretsView } from './GmSecretsView';
 import { GmScenarioEditor } from './GmScenarioEditor';
-import { ShieldAlert, KeyRound, Clock, Eye, Edit3, ArrowLeft, Lock, LogOut } from 'lucide-react';
+import { PhaseStoryBook } from './PhaseStoryBook';
+import { ShieldAlert, KeyRound, Clock, Eye, Edit3, ArrowLeft, Lock, LogOut, BookOpen } from 'lucide-react';
 
 interface GmConsoleProps {
   scenario: ScenarioData;
@@ -20,8 +21,9 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
   const [passwordInput, setPasswordInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'timer' | 'secrets' | 'editor'>('timer');
+  const [activeTab, setActiveTab] = useState<'timer' | 'storybook' | 'secrets' | 'editor'>('timer');
   const [verifiedGmPassword, setVerifiedGmPassword] = useState<string>('');
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(0);
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -182,41 +184,53 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
       </div>
 
       {/* GM Navigation Tabs */}
-      <div className="flex border-b border-[#b48c36]/40 gap-2">
+      <div className="flex border-b border-[#b48c36]/40 gap-1 sm:gap-2 overflow-x-auto pb-0.5">
         <button
           onClick={() => setActiveTab('timer')}
-          className={`px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'timer'
               ? 'border-[#b48c36] text-[#d4af37] bg-[#251e18]'
               : 'border-transparent text-[#a89988] hover:text-[#f5ede1]'
           }`}
         >
           <Clock className="w-4 h-4" />
-          <span>진행용 타이머 & 전체화면</span>
+          <span>진행 타이머</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('storybook')}
+          className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'storybook'
+              ? 'border-[#b48c36] text-[#d4af37] bg-[#251e18]'
+              : 'border-transparent text-[#a89988] hover:text-[#f5ede1]'
+          }`}
+        >
+          <BookOpen className="w-4 h-4 text-[#d4af37]" />
+          <span>단계별 스토리 & 공개(ON/OFF) 관리</span>
         </button>
 
         <button
           onClick={() => setActiveTab('secrets')}
-          className={`px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'secrets'
               ? 'border-[#b48c36] text-[#d4af37] bg-[#251e18]'
               : 'border-transparent text-[#a89988] hover:text-[#f5ede1]'
           }`}
         >
           <Eye className="w-4 h-4" />
-          <span>전 인물 극비 밀서 총람 ({scenario.characters.length}명)</span>
+          <span>전 인물 극비 밀서 ({scenario.characters.length}명)</span>
         </button>
 
         <button
           onClick={() => setActiveTab('editor')}
-          className={`px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'editor'
               ? 'border-[#b48c36] text-[#d4af37] bg-[#251e18]'
               : 'border-transparent text-[#a89988] hover:text-[#f5ede1]'
           }`}
         >
           <Edit3 className="w-4 h-4" />
-          <span>시나리오 편집 & 설정 내보내기</span>
+          <span>시나리오 편집</span>
         </button>
       </div>
 
@@ -224,7 +238,20 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
       <div>
         {activeTab === 'timer' && (
           <div className="space-y-4">
-            <GmTimer initialMinutes={scenario.defaultTimerMinutes || 60} />
+            <GmTimer
+              initialMinutes={scenario.defaultTimerMinutes || 15}
+              onPhaseChange={(idx) => setCurrentPhaseIndex(idx)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'storybook' && (
+          <div className="space-y-4">
+            <PhaseStoryBook
+              currentPhaseIndex={currentPhaseIndex}
+              onSelectPhase={(idx) => setCurrentPhaseIndex(idx)}
+              isGm={true}
+            />
           </div>
         )}
 

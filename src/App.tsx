@@ -5,6 +5,7 @@ import { CharacterSilhouette } from './components/CharacterSilhouette';
 import { SecretDossierModal } from './components/SecretDossierModal';
 import { DetectiveNotebook } from './components/DetectiveNotebook';
 import { GmConsole } from './components/GmConsole';
+import { PhaseStoryBook } from './components/PhaseStoryBook';
 import { isSoundEnabled, setSoundEnabled, playBrassChime, playPageFlipSound, playStampSlamSound } from './utils/sound';
 import {
   Compass,
@@ -41,40 +42,58 @@ interface ClueItem {
 
 const CRIME_SCENE_CLUES: ClueItem[] = [
   {
-    id: 'clue_wine',
-    name: '깨진 와인병 파편',
-    category: '둔기 흉기',
-    icon: '🍷',
-    foundLocation: '귀빈실 원형 마호가니 탁자 아래',
-    description: '1925년산 프랑스 보르도 와인병. 병목 부위가 날카롭게 깨져 있으며 피와 머리카락 일부가 묻어 있다.',
-    forensicNote: '피해자의 뒤통수 타박상과 일치. 정면에서 가격당한 것이 아니라 대화 중 기습당한 것으로 보임.',
-  },
-  {
-    id: 'clue_handkerchief',
-    name: '붉은 루즈가 번진 비단 손수건',
-    category: '유류품',
-    icon: '💄',
-    foundLocation: '소파 등받이 쿠션 틈새',
-    description: '고급 프랑스제 장미 향수 냄새가 진하게 배어 있는 연분홍 실크 손수건. 모서리에 영문 이니셜 "C.R"이 정교하게 자수되어 있다.',
-    forensicNote: '가수 강채령의 분장실 화장대에서 사용되는 립스틱 색상과 동일함.',
-  },
-  {
-    id: 'clue_telegram',
-    name: '반쯤 타다 남은 전보 용지',
-    category: '문서 증거',
-    icon: '📜',
-    foundLocation: '벽난로 재 속',
-    description: '모서리가 불에 탔으나 일부 글귀 판독 가능: "...상해(上海) 발송 자금 확인... 순종 하사 어보(御寶) 양도 담판... 11월 4일 낙원구락부 2층..."',
-    forensicNote: '피해자 배상호가 사망 직전 누군가와 밀거래 협상을 진행 중이었음을 입증함.',
-  },
-  {
-    id: 'clue_dagger',
-    name: '피 묻은 왕실 은장도 (치명적 흉기)',
+    id: 'clue_knife',
+    name: '가슴에 꽂힌 나이프 (치명적 흉기)',
     category: '직접 살해 흉기',
     icon: '🗡️',
-    foundLocation: '피해자의 좌측 심장 부위',
-    description: '정교한 매화 문양이 음각된 순은제 장도. 한약재를 정밀 절단하거나 수술용으로 사용되는 침구사의 도구와 형태가 흡사하다.',
-    forensicNote: '심장을 단번에 관통한 치명타. 은장도 손잡이에 지문은 닦여 있으나 약방 특유의 박하·백지 향기가 미세하게 감지됨.',
+    foundLocation: '서재 안락의자에 앉은 가와즈야의 심장',
+    description: '예리하고 날카로운 은제 나이프. 안락의자에 앉은 가와즈야의 가슴에 단번에 깊숙이 박혀 대량의 출혈을 일으켰다.',
+    forensicNote: '오전 0시, 서재 앞에서 작가가 발견하고 비명을 지름. 형사가 맥을 짚었을 당시 이미 사망한 상태였음.',
+  },
+  {
+    id: 'clue_prophecy',
+    name: '가와즈야의 흉악범죄 예언서',
+    category: '미완성 원고',
+    icon: '📜',
+    foundLocation: '서재 마호가니 책상 위',
+    description: '명탐정 가와즈야가 은퇴 전 남기겠다고 한 범죄 예언서. 제도의 향후 일어날 흉악 범죄의 추리가 적혀 있다.',
+    forensicNote: '가와즈야가 생전 축음기를 통해 언급했던 핵심 문서. 범죄자들의 정체와 수법이 적혀 있을 가능성이 높음.',
+  },
+  {
+    id: 'clue_letter_box',
+    name: '여섯 통의 편지가 든 금속제 상자',
+    category: '보안 상자',
+    icon: '✉️',
+    foundLocation: '저택 응접실 중앙 테이블',
+    description: '얇고 커다란 회화 형태의 금속제 상자. 가와즈야가 6인에게 각각 남긴 편지가 들어 있으며 자물쇠가 걸려 있다.',
+    forensicNote: '「작은 열쇠」 카드를 소지한 자만이 상자를 열 것을 선언할 수 있다.',
+  },
+  {
+    id: 'clue_gramophone',
+    name: '가와즈야의 전언 축음기',
+    category: '음성 기록',
+    icon: '📻',
+    foundLocation: '응접실 코너 테이블',
+    description: '조수가 태엽을 감아 재생한 나팔형 축음기. 노이즈 섞인 가와즈야의 육성으로 탐정 은퇴와 여흥, 면담을 지시했다.',
+    forensicNote: '축음기를 통해 전달된 가와즈야의 전언이 과연 그의 진짜 생존 육성인지, 아니면 미리 녹음된 것인지 의문이 남음.',
+  },
+  {
+    id: 'clue_mask',
+    name: '명탐정의 개구리 가면',
+    category: '피해자 소지품',
+    icon: '🐸',
+    foundLocation: '피해자 가와즈야의 얼굴',
+    description: '제도의 명탐정 가와즈야 세이지로가 4년간 결코 벗지 않았던 기괴한 녹색 개구리 가면.',
+    forensicNote: '시신의 얼굴에 씌워져 있던 가면. 제도의 수사 고문이자 전설적인 명탐정의 진짜 얼굴은 무엇이었는가.',
+  },
+  {
+    id: 'clue_dossier',
+    name: '자료실의 K·R·M 비밀 수사철',
+    category: '기록 문서',
+    icon: '📁',
+    foundLocation: '저택 1층 안쪽 극비 자료실',
+    description: '가와즈야가 모아둔 수사 자료들. K(까마귀 사건), R(후시미 리쓰코 사건), M(오오기 마리코 사건)의 알파벳 메모가 적혀 있다.',
+    forensicNote: '3장 조사 페이즈에서 플레이어들이 열람할 수 있는 핵심 단서 더미.',
   },
 ];
 
@@ -91,8 +110,11 @@ export default function App() {
   // Current view: 'cover' (신문 호외 대문), 'player' (탐정 수사 화면), 'gm' (GM 콘솔)
   const [currentView, setCurrentView] = useState<'cover' | 'player' | 'gm'>('cover');
 
-  // Player tabs: 'synopsis', 'characters', 'notebook'
-  const [playerTab, setPlayerTab] = useState<'synopsis' | 'characters' | 'notebook'>('synopsis');
+  // Player tabs: 'phases' (14단계 스토리 & 룰), 'characters' (6인 용의자), 'synopsis' (사건 개요), 'notebook' (수사 메모)
+  const [playerTab, setPlayerTab] = useState<'phases' | 'characters' | 'synopsis' | 'notebook'>('phases');
+
+  // Current game phase index (0 to 13)
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(0);
 
   // Selected clue for inspection modal
   const [selectedClue, setSelectedClue] = useState<ClueItem | null>(null);
@@ -112,7 +134,7 @@ export default function App() {
     setSoundEnabled(next);
   };
 
-  const handleTabChange = (tab: 'synopsis' | 'characters' | 'notebook') => {
+  const handleTabChange = (tab: 'phases' | 'characters' | 'synopsis' | 'notebook') => {
     setPlayerTab(tab);
     playPageFlipSound();
   };
@@ -127,7 +149,7 @@ export default function App() {
   };
 
   const handleResetToDefault = () => {
-    if (confirm('기본 시나리오(낙원구락부 밀실 살인사건)로 초기화하시겠습니까?')) {
+    if (confirm('기본 시나리오(탐정금지구역)로 초기화하시겠습니까?')) {
       localStorage.removeItem('boardbang_custom_scenario');
       setScenario(defaultScenario);
       alert('기본 시나리오로 복원되었습니다.');
@@ -372,7 +394,7 @@ export default function App() {
                     </span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold font-title text-[#f5ede1]">
-                    경성 종로 낙원구락부 살인사건 수사본부
+                    다이쇼 초기 제도 가와즈야 저택 연쇄살인 수사본부
                   </h2>
                 </div>
 
@@ -388,18 +410,18 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Navigation Tabs */}
+              {/* Navigation Tabs (4 Tabs) */}
               <div className="flex flex-wrap gap-2 text-xs sm:text-sm font-semibold">
                 <button
-                  onClick={() => handleTabChange('synopsis')}
+                  onClick={() => handleTabChange('phases')}
                   className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
-                    playerTab === 'synopsis'
+                    playerTab === 'phases'
                       ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
                       : 'border-[#5a483a] bg-[#140f0c] text-[#a89988] hover:text-[#f5ede1]'
                   }`}
                 >
-                  <FileText className="w-4 h-4" />
-                  <span>사건 개요 & 현장</span>
+                  <BookOpen className="w-4 h-4 text-[#d4af37]" />
+                  <span>단계별 스토리 & 진행 (14단계)</span>
                 </button>
 
                 <button
@@ -411,7 +433,19 @@ export default function App() {
                   }`}
                 >
                   <Users className="w-4 h-4" />
-                  <span>5인의 용의자 & 밀서 ({scenario.characters.length}명)</span>
+                  <span>6인의 용의자 & 밀서 ({scenario.characters.length}명)</span>
+                </button>
+
+                <button
+                  onClick={() => handleTabChange('synopsis')}
+                  className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+                    playerTab === 'synopsis'
+                      ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
+                      : 'border-[#5a483a] bg-[#140f0c] text-[#a89988] hover:text-[#f5ede1]'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>사건 개요 & 피해자</span>
                 </button>
 
                 <button
@@ -422,11 +456,21 @@ export default function App() {
                       : 'border-[#5a483a] bg-[#140f0c] text-[#a89988] hover:text-[#f5ede1]'
                   }`}
                 >
-                  <BookOpen className="w-4 h-4" />
+                  <Compass className="w-4 h-4" />
                   <span>탐정 수사 메모 & 판별</span>
                 </button>
               </div>
             </div>
+
+            {/* TAB 1: 14 PHASES STORYBOOK */}
+            {playerTab === 'phases' && (
+              <div className="space-y-4">
+                <PhaseStoryBook
+                  currentPhaseIndex={currentPhaseIndex}
+                  onSelectPhase={(idx) => setCurrentPhaseIndex(idx)}
+                />
+              </div>
+            )}
 
             {/* TAB 1: SYNOPSIS & CRIME SCENE */}
             {playerTab === 'synopsis' && (
@@ -457,22 +501,31 @@ export default function App() {
                         </h4>
                       </div>
                       <span className="text-[11px] px-2 py-0.5 border border-[#9b2226] text-[#ff8fa3] bg-[#9b2226]/20 font-bold">
-                        사망 확인
+                        피살 확인 (오전 0시)
                       </span>
                     </div>
 
-                    <div className="space-y-2 text-xs text-[#d8c8b4] font-sans">
-                      <div>
-                        <strong className="text-[#f5ede1]">성명 / 연령:</strong>{' '}
-                        {scenario.victim.name} ({scenario.victim.age}세)
+                    <div className="flex gap-3">
+                      <div className="shrink-0">
+                        <CharacterSilhouette type="frog" size={68} />
                       </div>
-                      <div>
-                        <strong className="text-[#f5ede1]">신분:</strong>{' '}
-                        {scenario.victim.description}
-                      </div>
-                      <div>
-                        <strong className="text-[#e63946]">직접 사인:</strong>{' '}
-                        {scenario.victim.causeOfDeath}
+                      <div className="space-y-1.5 text-xs text-[#d8c8b4] font-sans flex-1">
+                        <div>
+                          <strong className="text-[#f5ede1]">성명 / 연령:</strong>{' '}
+                          {scenario.victim.name} ({scenario.victim.age}세)
+                        </div>
+                        <div>
+                          <strong className="text-[#f5ede1]">직함 / 신분:</strong>{' '}
+                          {scenario.victim.title || scenario.victim.description}
+                        </div>
+                        <div>
+                          <strong className="text-[#d4af37]">특징:</strong>{' '}
+                          개구리 가면으로 정체를 숨긴 제도의 명탐정. 연쇄 살인마 까마귀의 숙적.
+                        </div>
+                        <div>
+                          <strong className="text-[#e63946]">직접 사인:</strong>{' '}
+                          {scenario.victim.causeOfDeath}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -483,7 +536,7 @@ export default function App() {
                       <div className="flex items-center gap-2 text-[#d4af37]">
                         <Compass className="w-4 h-4" />
                         <h4 className="font-bold text-sm font-title text-[#f5ede1]">
-                          사건 현장 (완전 밀실 상태)
+                          사건 현장 (가와즈야 저택 2층 서재)
                         </h4>
                       </div>
                       <span className="text-[11px] px-2 py-0.5 border border-[#b48c36] text-[#d4af37] bg-[#27201b] font-bold">
@@ -496,9 +549,13 @@ export default function App() {
                         <strong className="text-[#f5ede1]">발견 장소:</strong>{' '}
                         {scenario.victim.crimeScene}
                       </div>
-                      <div className="leading-relaxed">
-                        <strong className="text-[#d4af37]">밀실 특징:</strong>{' '}
-                        2층 귀빈실의 목재 출입문과 외부 창문 2곳 모두 안쪽에서 단단히 빗장이 걸려 있었음. 외부 침입 흔적 전무.
+                      <div>
+                        <strong className="text-[#d4af37]">발견 경위:</strong>{' '}
+                        오전 0시, 서재 앞 복도에서 작가가 주저앉아 비명을 지름. 서재 문은 열려 있었고, 안락의자에 가슴에 나이프가 꽂힌 가와즈야가 앉아 있었음.
+                      </div>
+                      <div>
+                        <strong className="text-[#b48c36]">저택 구조:</strong>{' '}
+                        1층 응접실(축음기 및 편지 상자 보관)과 안쪽 자료실(K·R·M 사건 파일), 2층 손님용 침실과 탐정의 서재.
                       </div>
                     </div>
                   </div>
@@ -602,7 +659,7 @@ export default function App() {
 
                           {/* Identity Details */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <h4 className="text-lg font-bold font-title text-[#f5ede1]">
                                 {char.name}
                               </h4>
@@ -616,8 +673,32 @@ export default function App() {
                               </span>
                             </div>
 
-                            <div className="text-xs text-[#d4af37] font-semibold mt-0.5">
-                              {char.occupation}
+                            {/* Role Title & Badges */}
+                            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                              {char.roleTitle && (
+                                <span className="text-xs font-bold text-[#f5ede1] bg-[#8b261e]/50 border border-[#b48c36]/40 px-1.5 py-0.2">
+                                  {char.roleTitle}
+                                </span>
+                              )}
+                              {char.groupName && (
+                                <span className={`text-[11px] px-1.5 py-0.2 font-serif border ${
+                                  char.group === 'carriage'
+                                    ? 'bg-[#3d261e] border-[#b48c36] text-[#e2c7a4]'
+                                    : 'bg-[#1b2838] border-[#457b9d] text-[#a8dadc]'
+                                }`}>
+                                  {char.groupName}
+                                </span>
+                              )}
+                              {char.interviewTime && (
+                                <span className="text-[11px] text-[#d4af37] bg-[#140f0c] border border-[#5a483a] px-1.5 py-0.2 font-mono">
+                                  면담: {char.interviewTime}
+                                </span>
+                              )}
+                              {char.hasSharpObjective && (
+                                <span className="text-[10px] text-[#ffccd5] bg-[#9b2226]/40 border border-[#9b2226] px-1 py-0.2 font-serif">
+                                  #표 목적 보유
+                                </span>
+                              )}
                             </div>
 
                             <p className="text-xs text-[#c2b092] mt-1.5 line-clamp-2 leading-relaxed">
@@ -634,7 +715,7 @@ export default function App() {
                             }
                             className="w-full py-1.5 px-2 bg-[#231a16] border border-[#3d3128] text-xs text-[#c2b092] hover:text-[#f5ede1] flex items-center justify-between rounded-sm transition-colors cursor-pointer"
                           >
-                            <span>공개 정보 (인상착의, 알리바이, 소지품)</span>
+                            <span>공개 정보 (인상착의, 이동 경로, 당일 행적, 소지품)</span>
                             {isPublicExpanded ? (
                               <ChevronUp className="w-3.5 h-3.5" />
                             ) : (
@@ -665,9 +746,9 @@ export default function App() {
                         </div>
 
                         {/* Card Bottom: Secret Dossier Trigger Button */}
-                        <div className="p-3 bg-[#241c18] border-t border-[#b48c36]/30 flex items-center justify-between gap-3">
-                          <div className="text-[11px] text-[#a89988]">
-                            역할 비밀번호 필요
+                        <div className="p-3 bg-[#241c18] border-t border-[#b48c36]/30 flex flex-wrap items-center justify-between gap-2">
+                          <div className="text-[11px] text-[#a89988] font-mono">
+                            {char.passwordHint || '역할 비밀번호 필요'}
                           </div>
 
                           <button

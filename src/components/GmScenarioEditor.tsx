@@ -7,9 +7,14 @@ import { Save, Copy, Check, Plus, Trash2, Download, Upload, Sparkles, RefreshCw,
 interface EditableCharacter {
   id: string;
   name: string;
+  roleTitle?: string;
+  group?: 'carriage' | 'train';
+  groupName?: string;
+  interviewTime?: string;
+  hasSharpObjective?: boolean;
   hanchaName: string;
-  age: number;
-  gender: '남' | '여';
+  age: number | string;
+  gender: '남' | '여' | '불명';
   occupation: string;
   summary: string;
   avatarIcon: string;
@@ -56,13 +61,20 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
 
   // Characters in editable form
   const [editableChars, setEditableChars] = useState<EditableCharacter[]>(() => {
-    // Default preset passwords and secrets for initial 5 characters
+    // Default preset passwords and hints for characters
     const defaultPasswords: Record<string, { pw: string; hint: string }> = {
-      char_1: { pw: '단풍잎', hint: '비밀번호: 단풍잎 (또는 1931)' },
-      char_2: { pw: '벨벳', hint: '비밀번호: 벨벳 (또는 2048)' },
-      char_3: { pw: '회중시계', hint: '비밀번호: 회중시계 (또는 7733)' },
-      char_4: { pw: '혜민', hint: '비밀번호: 혜민 (또는 5512)' },
-      char_5: { pw: '인텔리', hint: '비밀번호: 인텔리 (또는 9090)' },
+      char_detective: { pw: '형사', hint: '비밀번호: 형사 (또는 1920)' },
+      char_thief: { pw: '괴도', hint: '비밀번호: 괴도 (또는 2048)' },
+      char_journalist: { pw: '기자', hint: '비밀번호: 기자 (또는 3104)' },
+      char_writer: { pw: '작가', hint: '비밀번호: 작가 (또는 4821)' },
+      char_assistant: { pw: '조수', hint: '비밀번호: 조수 (또는 5279)' },
+      char_cleaner: { pw: '청소부', hint: '비밀번호: 청소부 (또는 6832)' },
+      char_1: { pw: '형사', hint: '비밀번호: 형사 (또는 1920)' },
+      char_2: { pw: '괴도', hint: '비밀번호: 괴도 (또는 2048)' },
+      char_3: { pw: '기자', hint: '비밀번호: 기자 (또는 3104)' },
+      char_4: { pw: '작가', hint: '비밀번호: 작가 (또는 4821)' },
+      char_5: { pw: '조수', hint: '비밀번호: 조수 (또는 5279)' },
+      char_6: { pw: '청소부', hint: '비밀번호: 청소부 (또는 6832)' },
     };
 
     return scenario.characters.map((c) => ({
@@ -156,6 +168,11 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
         compiledCharacters.push({
           id: ec.id,
           name: ec.name,
+          roleTitle: ec.roleTitle || ec.occupation,
+          group: ec.group || 'carriage',
+          groupName: ec.groupName || (ec.group === 'carriage' ? '마차조' : '기차조'),
+          interviewTime: ec.interviewTime,
+          hasSharpObjective: ec.hasSharpObjective,
           hanchaName: ec.hanchaName || undefined,
           age: Number(ec.age) || 25,
           gender: ec.gender,
@@ -178,20 +195,23 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
         id: scenario.id || `custom_${Date.now()}`,
         title,
         subtitle,
+        era: scenario.era || '다이쇼(大正) 시대 초기',
         date,
         location,
         synopsis,
         victim: {
           name: victimName,
-          age: Number(victimAge) || 50,
+          title: scenario.victim.title || '명탐정 / 수사 고문',
+          age: Number(victimAge) || 30,
           description: victimDesc,
           causeOfDeath: victimCause,
           crimeScene: victimCrimeScene,
+          maskInfo: scenario.victim.maskInfo || '개구리 가면',
         },
         rulesAndEtiquette: scenario.rulesAndEtiquette,
         characters: compiledCharacters,
         adminPasswordHash: adminHashResult,
-        defaultTimerMinutes: Number(defaultTimerMinutes) || 60,
+        defaultTimerMinutes: Number(defaultTimerMinutes) || 15,
       };
 
       // Immediately apply to current app session

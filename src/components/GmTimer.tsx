@@ -1,29 +1,61 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { playWatchTick, playBrassChime } from '../utils/sound';
-import { Play, Pause, RotateCcw, Plus, Minus, Maximize, Minimize, Volume2, VolumeX, Clock } from 'lucide-react';
+import { playWatchTick, playBrassChime, playStampSlamSound } from '../utils/sound';
+import { GAME_PHASES } from '../data/phasesData';
+import {
+  PhaseVisibilityMap,
+  getStoredPhaseVisibility,
+  togglePhaseUnlocked,
+  unlockUpToPhaseIndex,
+  PHASE_VISIBILITY_EVENT,
+} from '../utils/phaseStorage';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Plus,
+  Minus,
+  Maximize,
+  Minimize,
+  Volume2,
+  VolumeX,
+  Clock,
+  Lock,
+  Unlock,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 
 interface GmTimerProps {
   initialMinutes?: number;
   onPhaseChange?: (phaseIndex: number) => void;
 }
 
-const PHASES = [
-  { name: '1단계: 사건 브리핑 & 자기소개', desc: '각자 인물의 공개 정보와 당일 행적 소개' },
-  { name: '2단계: 1차 단서 조사 & 자유 밀담', desc: '의심스러운 인물들과 1:1 또는 소그룹 밀담' },
-  { name: '3단계: 2차 추가 심문 & 현장 검증', desc: '모순된 알리바이 추궁 및 유류품 검증' },
-  { name: '4단계: 최종 추리 발표', desc: '전체 인물이 돌아가며 지목할 범인과 트릭 추리' },
-  { name: '5단계: 최후의 투표 & 진상 공개', desc: '가장 의심스러운 1인 동시 지목 및 GM 진상 공개' },
-];
-
-export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 60 }) => {
+export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 15, onPhaseChange }) => {
   const [totalSeconds, setTotalSeconds] = useState(initialMinutes * 60);
   const [remainingSeconds, setRemainingSeconds] = useState(initialMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentPhase, setCurrentPhase] = useState(0);
   const [soundOn, setSoundOn] = useState(true);
+  const [visibilityMap, setVisibilityMap] = useState<PhaseVisibilityMap>(() =>
+    getStoredPhaseVisibility()
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync visibility changes
+  useEffect(() => {
+    const handleUpdate = () => {
+      setVisibilityMap(getStoredPhaseVisibility());
+    };
+    window.addEventListener(PHASE_VISIBILITY_EVENT, handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener(PHASE_VISIBILITY_EVENT, handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   // Countdown effect
   useEffect(() => {
@@ -146,34 +178,135 @@ export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 60 }) => {
         </div>
       </div>
 
-      {/* Phase Indicator */}
-      <div className="relative w-full max-w-2xl mb-6">
-        <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-2">
-          {PHASES.map((phase, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setCurrentPhase(idx);
-                if (soundOn) playBrassChime();
-              }}
-              className={`px-2.5 py-1 text-xs border rounded-sm transition-all cursor-pointer ${
-                currentPhase === idx
-                  ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
-                  : 'border-[#5a483a] bg-[#140f0c] text-[#a89988] hover:text-[#e8dfcc]'
-              }`}
-            >
-              {idx + 1}단계
-            </button>
-          ))}
+      {/* Phase Indicator (All 14 phases) with GM ON/OFF status */}
+      <div className="relative w-full max-w-3xl mb-4 font-serif">
+        <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#b48c36]/40">
+          {GAME_PHASES.map((p, idx) => {
+            const isUnlocked = visibilityMap[p.id] !== false;
+            const isSelected = currentPhase === idx;
+
+            return (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setCurrentPhase(idx);
+                  onPhaseChange?.(idx);
+                  if (p.durationMinutes) {
+                    handleSetDuration(p.durationMinutes);
+                  }
+                  if (soundOn) playBrassChime();
+                }}
+                className={`shrink-0 px-2.5 py-1 text-xs border rounded-xs transition-all cursor-pointer flex items-center gap-1 ${
+                  isSelected
+                    ? 'border-[#d4af37] bg-[#9b2226] text-[#faf6ee] font-bold shadow-md scale-105'
+                    : isUnlocked
+                    ? 'border-[#4a3b32] bg-[#1a1410] text-[#e8dfcc] hover:border-[#b48c36]/60'
+                    : 'border-[#33221d] bg-[#120e0c] text-[#7a6b61] hover:border-[#4d362f]'
+                }`}
+                title={`${p.numberTitle} (${isUnlocked ? '탐정 공개 ON' : '탐정 비공개 OFF'})`}
+              >
+                {isUnlocked ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                ) : (
+                  <Lock className="w-2.5 h-2.5 text-red-400 shrink-0" />
+                )}
+                <span>{p.numberTitle.split('(')[0]}</span>
+              </button>
+            );
+          })}
         </div>
-        <div className="text-center">
-          <div className="text-sm font-bold text-[#d4af37]">
-            {PHASES[currentPhase].name}
-          </div>
-          <div className="text-xs text-[#a89988] mt-0.5">
-            {PHASES[currentPhase].desc}
-          </div>
-        </div>
+
+        {/* Selected Phase Info & Instant Detective Visibility Toggle */}
+        {(() => {
+          const selectedPhaseObj = GAME_PHASES[currentPhase] || GAME_PHASES[0];
+          const isSelectedUnlocked = visibilityMap[selectedPhaseObj.id] !== false;
+
+          const handleToggleSelected = () => {
+            if (selectedPhaseObj.id === 'phase_0_opening') return;
+            const updated = togglePhaseUnlocked(selectedPhaseObj.id);
+            setVisibilityMap(updated);
+            playStampSlamSound();
+          };
+
+          const handleUnlockUpToThis = () => {
+            const updated = unlockUpToPhaseIndex(currentPhase);
+            setVisibilityMap(updated);
+            playBrassChime();
+          };
+
+          return (
+            <div className="mt-2 bg-[#171310] p-3 border border-[#b48c36]/40 rounded-xs flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-bold text-[#d4af37]">
+                  {selectedPhaseObj.numberTitle}: {selectedPhaseObj.name}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5 text-xs text-[#a89988]">
+                  {selectedPhaseObj.durationMinutes && (
+                    <span className="font-mono text-[#e2c7a4]">
+                      [권장 진행 시간: {selectedPhaseObj.durationMinutes}분]
+                    </span>
+                  )}
+                  <span>·</span>
+                  <span
+                    className={`font-semibold flex items-center gap-1 ${
+                      isSelectedUnlocked ? 'text-emerald-400' : 'text-red-400'
+                    }`}
+                  >
+                    {isSelectedUnlocked ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>탐정 화면에 공개 중 (ON)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>탐정 화면 비공개/봉인 중 (OFF)</span>
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons for this Phase */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleUnlockUpToThis}
+                  className="px-2.5 py-1 bg-[#251e18] hover:bg-[#342a22] text-[#d4af37] border border-[#b48c36]/60 rounded-xs text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                  title="이 단계까지 이전 모든 단계를 탐정에게 해금"
+                >
+                  <Unlock className="w-3.5 h-3.5" />
+                  <span>이 단계까지 일괄 해금</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleSelected}
+                  disabled={selectedPhaseObj.id === 'phase_0_opening'}
+                  className={`px-3 py-1 rounded-xs border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                    selectedPhaseObj.id === 'phase_0_opening'
+                      ? 'bg-emerald-950/40 border-emerald-700/40 text-emerald-300/60 cursor-not-allowed'
+                      : isSelectedUnlocked
+                      ? 'bg-red-950/80 hover:bg-red-900 border-red-500 text-red-200'
+                      : 'bg-emerald-950/80 hover:bg-emerald-900 border-emerald-500 text-emerald-200'
+                  }`}
+                >
+                  {isSelectedUnlocked ? (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-red-400" />
+                      <span>비공개(OFF)로 잠그기</span>
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>탐정에게 공개(ON)하기</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Pocket Watch Dial & Digital Display */}
