@@ -139,7 +139,7 @@ export function togglePhaseUnlocked(phaseId: string, unlocked?: boolean): PhaseV
 }
 
 // ==========================================
-// Multi-Device Cross-Sync Service (SSE + Polling)
+// Multi-Device Cross-Sync Service (SSE + Polling + Mobile Resume)
 // ==========================================
 
 let isSyncInitialized = false;
@@ -167,6 +167,39 @@ function applyRemoteState(remoteMap: Record<string, boolean>) {
 }
 
 /**
+ * Fetch latest game state from server with cache busting and credentials
+ */
+export async function fetchLatestState(): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/game-state?t=${Date.now()}`, {
+      credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+    });
+
+    if (!res.ok) return false;
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) return false;
+
+    const data = await res.json();
+    if (data?.phaseVisibility) {
+      applyRemoteState(data.phaseVisibility);
+      window.dispatchEvent(
+        new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'connected' } })
+      );
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('[Sync] Fetch note:', err);
+    return false;
+  }
+}
+
+/**
  * Initializes real-time synchronization with the server so that GM's locks/unlocks
  * on any device are immediately reflected on all other devices (smartphones, PCs, tablets).
  */
@@ -176,56 +209,70 @@ export function initCrossDeviceSync(): () => void {
   isSyncInitialized = true;
 
   // 1. Initial REST fetch
-  fetch('/api/game-state')
-    .then((res) => {
-      if (!res.ok) throw new Error('Server returned non-200');
-      return res.json();
-    })
-    .then((data) => {
-      if (data?.phaseVisibility) {
-        applyRemoteState(data.phaseVisibility);
-        window.dispatchEvent(new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'connected' } }));
-      }
-    })
-    .catch((err) => {
-      console.warn('[Sync] Server fetch note:', err.message);
-    });
+  fetchLatestState();
 
-  // 2. Setup Server-Sent Events (SSE) for millisecond real-time push
-  try {
-    eventSource = new EventSource('/api/game-state/stream');
+  // 2. Setup Server-Sent Events (SSE) with auto-reconnect
+  const setupSSE = () => {
+    if (eventSource) {
+      try { eventSource.close(); } catch {}
+      eventSource = null;
+    }
 
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data?.phaseVisibility) {
-          applyRemoteState(data.phaseVisibility);
-          window.dispatchEvent(new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'realtime' } }));
+    try {
+      eventSource = new EventSource('/api/game-state/stream', { withCredentials: true });
+
+      eventSource.onopen = () => {
+        window.dispatchEvent(
+          new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'realtime' } })
+        );
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          // Ignore comments/pings
+          if (!event.data || event.data.startsWith(':')) return;
+          const data = JSON.parse(event.data);
+          if (data?.phaseVisibility) {
+            applyRemoteState(data.phaseVisibility);
+            window.dispatchEvent(
+              new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'realtime' } })
+            );
+          }
+        } catch (e) {
+          console.error('Error parsing SSE event data', e);
         }
-      } catch (e) {
-        console.error('Error parsing SSE event data', e);
-      }
-    };
+      };
 
-    eventSource.onerror = () => {
-      // EventSource automatically retries; fall back to short polling if disconnected
-      window.dispatchEvent(new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: false, mode: 'reconnecting' } }));
-    };
-  } catch (err) {
-    console.warn('[Sync] SSE not available, using periodic sync', err);
-  }
+      eventSource.onerror = () => {
+        window.dispatchEvent(
+          new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: false, mode: 'reconnecting' } })
+        );
+      };
+    } catch (err) {
+      console.warn('[Sync] SSE setup warning:', err);
+    }
+  };
 
-  // 3. Periodic fallback poll every 3 seconds to guarantee sync even on mobile network interruptions
+  setupSSE();
+
+  // 3. Periodic fallback poll every 2.5 seconds to guarantee sync even on mobile network drops
   pollTimer = window.setInterval(() => {
-    fetch('/api/game-state')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.phaseVisibility) {
-          applyRemoteState(data.phaseVisibility);
-        }
-      })
-      .catch(() => {});
-  }, 3000);
+    fetchLatestState();
+  }, 2500);
+
+  // 4. Mobile screen unlock / tab focus detection
+  // Mobile browsers freeze background tabs; when user views tab again, immediately sync!
+  const handleVisibilityOrFocus = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      fetchLatestState();
+      if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
+        setupSSE();
+      }
+    }
+  };
+
+  window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+  window.addEventListener('focus', handleVisibilityOrFocus);
 
   return () => {
     if (eventSource) {
@@ -236,6 +283,8 @@ export function initCrossDeviceSync(): () => void {
       clearInterval(pollTimer);
       pollTimer = null;
     }
+    window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.removeEventListener('focus', handleVisibilityOrFocus);
     isSyncInitialized = false;
   };
 }

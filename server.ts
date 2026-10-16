@@ -82,8 +82,23 @@ function broadcastState() {
   }
 }
 
+// CORS and caching middleware for multi-device & mobile compatibility
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 // API Routes
 app.get('/api/game-state', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.json(gameState);
 });
 
@@ -119,8 +134,9 @@ app.post('/api/game-state/reset', (_req: Request, res: Response) => {
 // SSE endpoint for instant real-time sync across all connected player devices
 app.get('/api/game-state/stream', (req: Request, res: Response) => {
   res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Crucial for nginx/Cloud Run reverse proxies!
   if (typeof (res as any).flushHeaders === 'function') {
     (res as any).flushHeaders();
   }
@@ -129,7 +145,17 @@ app.get('/api/game-state/stream', (req: Request, res: Response) => {
   res.write(`data: ${JSON.stringify(gameState)}\n\n`);
   sseClients.push(res);
 
+  // Send periodic keep-alive ping every 15s to prevent mobile carriers/gateways from dropping the connection
+  const keepAliveTimer = setInterval(() => {
+    try {
+      res.write(': keepalive-ping\n\n');
+    } catch {
+      clearInterval(keepAliveTimer);
+    }
+  }, 15000);
+
   req.on('close', () => {
+    clearInterval(keepAliveTimer);
     const idx = sseClients.indexOf(res);
     if (idx !== -1) sseClients.splice(idx, 1);
   });

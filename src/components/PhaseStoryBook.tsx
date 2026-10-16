@@ -15,6 +15,7 @@ import {
   unlockUpToPhaseIndex,
   unlockAllPhases,
   resetPhaseVisibility,
+  fetchLatestState,
   PHASE_VISIBILITY_EVENT,
 } from '../utils/phaseStorage';
 import {
@@ -23,6 +24,7 @@ import {
   BookOpen,
   Volume2,
   Clock,
+  RotateCw,
   AlertTriangle,
   Users,
   Compass,
@@ -425,8 +427,21 @@ export const PhaseStoryBook: React.FC<PhaseStoryBookProps> = ({
             </p>
           </div>
 
-          {/* Quick Return to Highest Unlocked Phase */}
+          {/* Quick Actions */}
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                await fetchLatestState();
+                playBrassChime();
+              }}
+              className="px-3.5 py-2 bg-[#251e18] hover:bg-[#342a22] text-[#d4af37] border border-[#b48c36]/60 font-semibold text-xs sm:text-sm rounded-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+              title="GM이 잠금을 풀었는지 서버에서 최신 상태를 확인합니다"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+              <span>잠금 해제 여부 확인 (동기화)</span>
+            </button>
+
             <button
               type="button"
               onClick={() => handleSelect(highestUnlockedIndex)}

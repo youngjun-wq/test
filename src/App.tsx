@@ -7,7 +7,7 @@ import { DetectiveNotebook } from './components/DetectiveNotebook';
 import { GmConsole } from './components/GmConsole';
 import { PhaseStoryBook } from './components/PhaseStoryBook';
 import { isSoundEnabled, setSoundEnabled, playBrassChime, playPageFlipSound, playStampSlamSound } from './utils/sound';
-import { initCrossDeviceSync, SERVER_SYNC_STATUS_EVENT } from './utils/phaseStorage';
+import { initCrossDeviceSync, fetchLatestState, SERVER_SYNC_STATUS_EVENT } from './utils/phaseStorage';
 import {
   Compass,
   FileText,
@@ -205,18 +205,18 @@ export default function App() {
 
           {/* Header Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Real-time Multi-device Sync Badge */}
-            <div
-              className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded border text-[11px] ${
+            {/* Real-time Multi-device Sync Badge & Button */}
+            <button
+              onClick={async () => {
+                const ok = await fetchLatestState();
+                if (ok) playBrassChime();
+              }}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[11px] transition-all active:scale-95 cursor-pointer ${
                 syncStatus.connected
-                  ? 'bg-[#1b261b] border-emerald-700/60 text-emerald-300'
-                  : 'bg-[#291e14] border-amber-700/60 text-amber-300'
+                  ? 'bg-[#1b261b] border-emerald-700/60 text-emerald-300 hover:bg-[#223522]'
+                  : 'bg-[#291e14] border-amber-700/60 text-amber-300 hover:bg-[#38281b]'
               }`}
-              title={
-                syncStatus.connected
-                  ? 'GM이 조작한 단계 잠금/해금이 모든 탐정 기기(스마트폰/PC)에 실시간으로 동기화됩니다.'
-                  : '서버와 연결을 확인하는 중입니다.'
-              }
+              title="클릭/터치 시 서버로부터 최신 잠금/진행 상태를 즉시 동기화합니다."
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
@@ -224,9 +224,19 @@ export default function App() {
                 }`}
               />
               <span className="font-sans">
-                {syncStatus.connected ? '다중기기 실시간 연동' : '동기화 확인중'}
+                {syncStatus.connected ? (
+                  <>
+                    <span className="hidden sm:inline">다중기기 실시간 연동</span>
+                    <span className="sm:hidden">실시간 연동</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">터치하여 동기화</span>
+                    <span className="sm:hidden">재동기화</span>
+                  </>
+                )}
               </span>
-            </div>
+            </button>
 
             <button
               onClick={handleToggleSound}
