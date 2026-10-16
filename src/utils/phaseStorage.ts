@@ -4,6 +4,7 @@ export type PhaseVisibilityMap = Record<string, boolean>;
 
 const STORAGE_KEY = 'boardbang_phase_visibility_v1';
 export const PHASE_VISIBILITY_EVENT = 'boardbang_phase_visibility_change';
+export const SERVER_SYNC_STATUS_EVENT = 'boardbang_server_sync_status';
 
 /**
  * Initial default unlocked phases:
@@ -53,12 +54,24 @@ export function getStoredPhaseVisibility(): PhaseVisibilityMap {
 }
 
 /**
- * Save phase visibility state to localStorage and trigger change notification
+ * Save phase visibility state to localStorage, trigger local event,
+ * and push to backend server for instant multi-device sync
  */
-export function savePhaseVisibility(map: PhaseVisibilityMap): void {
+export function savePhaseVisibility(map: PhaseVisibilityMap, broadcastToServer: boolean = true): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
     window.dispatchEvent(new CustomEvent(PHASE_VISIBILITY_EVENT, { detail: map }));
+
+    if (broadcastToServer) {
+      // Asynchronously send to server so all other player devices receive it immediately
+      fetch('/api/game-state/phase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phaseVisibility: map }),
+      }).catch((err) => {
+        console.warn('Failed to broadcast phase lock to server:', err);
+      });
+    }
   } catch (err) {
     console.error('Failed to save phase visibility', err);
   }
@@ -77,7 +90,7 @@ export function unlockUpToPhaseIndex(index: number): PhaseVisibilityMap {
     }
   });
 
-  savePhaseVisibility(next);
+  savePhaseVisibility(next, true);
   return next;
 }
 
@@ -89,7 +102,7 @@ export function unlockAllPhases(): PhaseVisibilityMap {
   GAME_PHASES.forEach((p) => {
     next[p.id] = true;
   });
-  savePhaseVisibility(next);
+  savePhaseVisibility(next, true);
   return next;
 }
 
@@ -98,7 +111,9 @@ export function unlockAllPhases(): PhaseVisibilityMap {
  */
 export function resetPhaseVisibility(): PhaseVisibilityMap {
   const next = { ...DEFAULT_UNLOCKED_PHASES };
-  savePhaseVisibility(next);
+  savePhaseVisibility(next, true);
+
+  fetch('/api/game-state/reset', { method: 'POST' }).catch(() => {});
   return next;
 }
 
@@ -119,6 +134,108 @@ export function togglePhaseUnlocked(phaseId: string, unlocked?: boolean): PhaseV
     [phaseId]: nextState,
   };
 
-  savePhaseVisibility(next);
+  savePhaseVisibility(next, true);
   return next;
+}
+
+// ==========================================
+// Multi-Device Cross-Sync Service (SSE + Polling)
+// ==========================================
+
+let isSyncInitialized = false;
+let eventSource: EventSource | null = null;
+let pollTimer: number | null = null;
+
+function applyRemoteState(remoteMap: Record<string, boolean>) {
+  if (!remoteMap || typeof remoteMap !== 'object') return;
+  const current = getStoredPhaseVisibility();
+
+  let hasDiff = false;
+  const merged: PhaseVisibilityMap = { ...current };
+
+  GAME_PHASES.forEach((p) => {
+    if (typeof remoteMap[p.id] === 'boolean' && remoteMap[p.id] !== current[p.id]) {
+      merged[p.id] = remoteMap[p.id];
+      hasDiff = true;
+    }
+  });
+
+  if (hasDiff) {
+    // Save locally without re-broadcasting to avoid infinite ping-pong loops
+    savePhaseVisibility(merged, false);
+  }
+}
+
+/**
+ * Initializes real-time synchronization with the server so that GM's locks/unlocks
+ * on any device are immediately reflected on all other devices (smartphones, PCs, tablets).
+ */
+export function initCrossDeviceSync(): () => void {
+  if (typeof window === 'undefined') return () => {};
+  if (isSyncInitialized) return () => {};
+  isSyncInitialized = true;
+
+  // 1. Initial REST fetch
+  fetch('/api/game-state')
+    .then((res) => {
+      if (!res.ok) throw new Error('Server returned non-200');
+      return res.json();
+    })
+    .then((data) => {
+      if (data?.phaseVisibility) {
+        applyRemoteState(data.phaseVisibility);
+        window.dispatchEvent(new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'connected' } }));
+      }
+    })
+    .catch((err) => {
+      console.warn('[Sync] Server fetch note:', err.message);
+    });
+
+  // 2. Setup Server-Sent Events (SSE) for millisecond real-time push
+  try {
+    eventSource = new EventSource('/api/game-state/stream');
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data?.phaseVisibility) {
+          applyRemoteState(data.phaseVisibility);
+          window.dispatchEvent(new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'realtime' } }));
+        }
+      } catch (e) {
+        console.error('Error parsing SSE event data', e);
+      }
+    };
+
+    eventSource.onerror = () => {
+      // EventSource automatically retries; fall back to short polling if disconnected
+      window.dispatchEvent(new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: false, mode: 'reconnecting' } }));
+    };
+  } catch (err) {
+    console.warn('[Sync] SSE not available, using periodic sync', err);
+  }
+
+  // 3. Periodic fallback poll every 3 seconds to guarantee sync even on mobile network interruptions
+  pollTimer = window.setInterval(() => {
+    fetch('/api/game-state')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.phaseVisibility) {
+          applyRemoteState(data.phaseVisibility);
+        }
+      })
+      .catch(() => {});
+  }, 3000);
+
+  return () => {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+    isSyncInitialized = false;
+  };
 }

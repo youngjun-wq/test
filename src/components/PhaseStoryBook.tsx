@@ -172,7 +172,7 @@ export const PhaseStoryBook: React.FC<PhaseStoryBookProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-[#a89988]">
-                  스포일러를 방지하기 위해 탐정들이 읽을 수 있는 단계를 직접 ON/OFF 하십시오.
+                  스포일러를 방지하기 위해 단계를 직접 ON/OFF 하십시오. <span className="text-[#d4af37] font-semibold">(다른 스마트폰·PC 접속자에게 실시간 즉시 반영)</span>
                 </p>
               </div>
             </div>

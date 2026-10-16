@@ -1,0 +1,20 @@
+{
+  "phaseVisibility": {
+    "phase_0_opening": true,
+    "phase_1_travel": true,
+    "phase_intro": false,
+    "phase_interlude1": false,
+    "phase_2_talk": false,
+    "phase_interlude2": false,
+    "phase_3_investigate": false,
+    "phase_3_talk": false,
+    "phase_interlude3": false,
+    "phase_4_investigate": false,
+    "phase_4_talk": false,
+    "phase_all_meeting": false,
+    "phase_deduction_vote": false,
+    "phase_ending": false
+  },
+  "currentPhaseIndex": 0,
+  "lastUpdated": 1792124259963
+}

@@ -7,12 +7,14 @@ import { DetectiveNotebook } from './components/DetectiveNotebook';
 import { GmConsole } from './components/GmConsole';
 import { PhaseStoryBook } from './components/PhaseStoryBook';
 import { isSoundEnabled, setSoundEnabled, playBrassChime, playPageFlipSound, playStampSlamSound } from './utils/sound';
+import { initCrossDeviceSync, SERVER_SYNC_STATUS_EVENT } from './utils/phaseStorage';
 import {
   Compass,
   FileText,
   Users,
   BookOpen,
   Lock,
+  Wifi,
   Volume2,
   VolumeX,
   ShieldAlert,
@@ -128,6 +130,21 @@ export default function App() {
   // Sound toggle
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
 
+  // Real-time cross-device sync status
+  const [syncStatus, setSyncStatus] = useState<{ connected: boolean; mode: string }>({ connected: true, mode: 'init' });
+
+  useEffect(() => {
+    const cleanup = initCrossDeviceSync();
+    const handleSyncStatus = (e: any) => {
+      if (e.detail) setSyncStatus(e.detail);
+    };
+    window.addEventListener(SERVER_SYNC_STATUS_EVENT, handleSyncStatus);
+    return () => {
+      cleanup();
+      window.removeEventListener(SERVER_SYNC_STATUS_EVENT, handleSyncStatus);
+    };
+  }, []);
+
   const handleToggleSound = () => {
     const next = !soundOn;
     setSoundOn(next);
@@ -188,6 +205,29 @@ export default function App() {
 
           {/* Header Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Real-time Multi-device Sync Badge */}
+            <div
+              className={`hidden sm:flex items-center gap-1.5 px-2 py-1 rounded border text-[11px] ${
+                syncStatus.connected
+                  ? 'bg-[#1b261b] border-emerald-700/60 text-emerald-300'
+                  : 'bg-[#291e14] border-amber-700/60 text-amber-300'
+              }`}
+              title={
+                syncStatus.connected
+                  ? 'GM이 조작한 단계 잠금/해금이 모든 탐정 기기(스마트폰/PC)에 실시간으로 동기화됩니다.'
+                  : '서버와 연결을 확인하는 중입니다.'
+              }
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  syncStatus.connected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                }`}
+              />
+              <span className="font-sans">
+                {syncStatus.connected ? '다중기기 실시간 연동' : '동기화 확인중'}
+              </span>
+            </div>
+
             <button
               onClick={handleToggleSound}
               className={`p-1.5 rounded-sm border transition-colors ${
