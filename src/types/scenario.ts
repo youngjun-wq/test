@@ -1,10 +1,11 @@
 import { EncryptedPayload } from '../utils/crypto';
 
 export interface PublicCharacterInfo {
-  appearance: string;
-  timeline: string;
-  testimony: string;
-  belongings: string[];
+  text?: string;
+  appearance?: string;
+  timeline?: string;
+  testimony?: string;
+  belongings?: string[];
 }
 
 export type CharacterGroupId = 'carriage' | 'train';

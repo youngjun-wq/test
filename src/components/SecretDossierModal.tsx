@@ -3,6 +3,7 @@ import { CharacterData } from '../types/scenario';
 import { decryptAESGCM } from '../utils/crypto';
 import { playSealBreakSound, playTypewriterJamSound } from '../utils/sound';
 import { Lock, Eye, EyeOff, ShieldAlert, X, Copy, Check, Sparkles } from 'lucide-react';
+import { MarkdownViewer } from './MarkdownViewer';
 
 interface SecretDossierModalProps {
   character: CharacterData;
@@ -262,7 +263,7 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
 
                 <div className="border-b border-[#2b241e]/20 pb-2 mb-4">
                   <div className="text-[10px] tracking-widest text-[#7a6a5d] uppercase">
-                    CONFIDENTIAL DOSSIER · GYEONGSEONG 1931
+                    CONFIDENTIAL DOSSIER · 探偵禁止區域 (탐정금지구역)
                   </div>
                   <h4 className="text-xl font-bold font-title text-[#1c1917] mt-1">
                     {character.name} {character.hanchaName ? `(${character.hanchaName})` : ''} 귀하
@@ -272,15 +273,15 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
                   </div>
                 </div>
 
-                {/* Secret Content */}
-                <div className="text-sm leading-relaxed text-[#211d1a] whitespace-pre-wrap font-sans space-y-3 font-normal">
-                  {decryptedSecret}
+                {/* Secret Content with Rich Vintage Styling */}
+                <div className="text-sm leading-relaxed text-[#211d1a] font-sans font-normal">
+                  <MarkdownViewer content={decryptedSecret} />
                 </div>
 
                 {/* Bottom Signature / Date */}
                 <div className="mt-6 pt-3 border-t border-[#2b241e]/20 flex items-center justify-between text-xs text-[#6e5d50]">
-                  <span>경성 종로 황금정 낙원구락부 사건본부</span>
-                  <span className="font-serif italic">1931. 11. 04</span>
+                  <span>제도 교외 가와즈야 저택 사건 수사</span>
+                  <span className="font-serif italic">다이쇼 초기 어느 가을 밤</span>
                 </div>
               </div>
 

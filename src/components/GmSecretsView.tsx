@@ -3,6 +3,7 @@ import { CharacterData } from '../types/scenario';
 import { decryptAESGCM } from '../utils/crypto';
 import { CharacterSilhouette } from './CharacterSilhouette';
 import { KeyRound, ShieldAlert, Check, Copy, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { MarkdownViewer } from './MarkdownViewer';
 
 interface GmSecretsViewProps {
   characters: CharacterData[];
@@ -152,8 +153,8 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
                   </div>
 
                   {secret ? (
-                    <div className="p-4 bg-[#f6f1e5] text-[#1c1917] rounded-sm text-xs sm:text-sm font-sans leading-relaxed whitespace-pre-wrap shadow-inner border border-[#b48c36]/40">
-                      {secret}
+                    <div className="p-4 bg-[#f6f1e5] text-[#1c1917] rounded-sm text-xs sm:text-sm font-sans leading-relaxed shadow-inner border border-[#b48c36]/40">
+                      <MarkdownViewer content={secret} />
                     </div>
                   ) : error ? (
                     <div className="p-3 bg-[#9b2226]/20 border border-[#9b2226] text-xs text-[#ff8fa3]">
@@ -163,9 +164,17 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
                     <div className="text-xs text-[#a89988]">복호화 계산 중...</div>
                   )}
 
-                  {/* Public testimony reminder for GM */}
+                  {/* Public info reminder for GM */}
                   <div className="mt-3 p-3 bg-[#1e1814] border border-[#3d3128] text-xs text-[#a89988] font-sans">
-                    <strong className="text-[#d4af37]">공개된 증언:</strong> "{char.publicInfo.testimony}"
+                    {char.publicInfo.testimony ? (
+                      <div>
+                        <strong className="text-[#d4af37]">공개된 증언:</strong> "{char.publicInfo.testimony}"
+                      </div>
+                    ) : char.publicInfo.text ? (
+                      <div>
+                        <strong className="text-[#d4af37]">공개 정보:</strong> {char.publicInfo.text}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               )}

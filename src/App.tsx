@@ -33,6 +33,11 @@ import {
   Search,
   X,
   Flame,
+  Info,
+  Feather,
+  Swords,
+  Award,
+  Scale,
 } from 'lucide-react';
 
 interface ClueItem {
@@ -106,7 +111,13 @@ export default function App() {
   const [scenario, setScenario] = useState<ScenarioData>(() => {
     try {
       const saved = localStorage.getItem('boardbang_custom_scenario');
-      return saved ? JSON.parse(saved) : defaultScenario;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.id === defaultScenario.id) {
+          return parsed;
+        }
+      }
+      return defaultScenario;
     } catch {
       return defaultScenario;
     }
@@ -345,10 +356,10 @@ export default function App() {
               <div className="border-t border-b border-[#1c1917]/20 py-4 my-4 grid grid-cols-1 md:grid-cols-12 gap-5 text-xs sm:text-sm leading-relaxed text-[#2c241e]">
                 <div className="md:col-span-8 space-y-3 font-serif">
                   <p className="first-letter:text-4xl first-letter:font-bold first-letter:float-left first-letter:mr-2 first-letter:text-[#800f13] leading-relaxed">
-                    {scenario.synopsis.split('\n')[0]}
+                    다이쇼(大正) 시대 초기, 제도(帝都).
                   </p>
-                  <p className="text-[#4a3d34]">
-                    현장에 억류된 5인의 주요 용의자들은 저마다의 알리바이와 무고함을 주장하고 있으나, 모두 피해자에게 치명적인 원한이나 말 못 할 비밀을 품고 있음이 드러났다.
+                  <p className="text-[#4a3d34] leading-relaxed">
+                    현장에있던 6인의 주요 용의자들은 저마다의 알리바이와 무고함을 주장하고 있으나, 모두 피해자에게 어떠한 원한이나 말 못 할 비밀을 품고 있음이 드러났다. 과연 이들은 진실에 도달할 수 있을까?
                   </p>
                 </div>
 
@@ -457,7 +468,7 @@ export default function App() {
                     </span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold font-title text-[#f5ede1]">
-                    다이쇼 초기 제도 가와즈야 저택 연쇄살인 수사본부
+                    다이쇼 초기 제도 가와즈야 저택 살인사건 수사
                   </h2>
                 </div>
 
@@ -552,124 +563,77 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Victim & Scene Profile */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Victim Dossier */}
-                  <div className="p-5 bg-[#231816] border border-[#9b2226]/50 rounded-sm space-y-3 shadow-md hover:border-[#e63946] transition-colors">
-                    <div className="flex items-center justify-between border-b border-[#9b2226]/30 pb-2">
-                      <div className="flex items-center gap-2 text-[#e63946]">
-                        <AlertTriangle className="w-4 h-4" />
-                        <h4 className="font-bold text-sm font-title text-[#f5ede1]">
-                          피해자 감식 보고서
-                        </h4>
-                      </div>
-                      <span className="text-[11px] px-2 py-0.5 border border-[#9b2226] text-[#ff8fa3] bg-[#9b2226]/20 font-bold">
-                        피살 확인 (오전 0시)
-                      </span>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <div className="shrink-0">
-                        <CharacterSilhouette type="frog" size={68} />
-                      </div>
-                      <div className="space-y-1.5 text-xs text-[#d8c8b4] font-sans flex-1">
-                        <div>
-                          <strong className="text-[#f5ede1]">성명 / 연령:</strong>{' '}
-                          {scenario.victim.name} ({scenario.victim.age}세)
-                        </div>
-                        <div>
-                          <strong className="text-[#f5ede1]">직함 / 신분:</strong>{' '}
-                          {scenario.victim.title || scenario.victim.description}
-                        </div>
-                        <div>
-                          <strong className="text-[#d4af37]">특징:</strong>{' '}
-                          개구리 가면으로 정체를 숨긴 제도의 명탐정. 연쇄 살인마 까마귀의 숙적.
-                        </div>
-                        <div>
-                          <strong className="text-[#e63946]">직접 사인:</strong>{' '}
-                          {scenario.victim.causeOfDeath}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Crime Scene Dossier */}
-                  <div className="p-5 bg-[#1b1714] border border-[#b48c36]/40 rounded-sm space-y-3 shadow-md">
-                    <div className="flex items-center justify-between border-b border-[#3d3128] pb-2">
-                      <div className="flex items-center gap-2 text-[#d4af37]">
-                        <Compass className="w-4 h-4" />
-                        <h4 className="font-bold text-sm font-title text-[#f5ede1]">
-                          사건 현장 (가와즈야 저택 2층 서재)
-                        </h4>
-                      </div>
-                      <span className="text-[11px] px-2 py-0.5 border border-[#b48c36] text-[#d4af37] bg-[#27201b] font-bold">
-                        현장 보존
-                      </span>
-                    </div>
-
-                    <div className="space-y-2 text-xs text-[#d8c8b4] font-sans">
-                      <div>
-                        <strong className="text-[#f5ede1]">발견 장소:</strong>{' '}
-                        {scenario.victim.crimeScene}
-                      </div>
-                      <div>
-                        <strong className="text-[#d4af37]">발견 경위:</strong>{' '}
-                        오전 0시, 서재 앞 복도에서 작가가 주저앉아 비명을 지름. 서재 문은 열려 있었고, 안락의자에 가슴에 나이프가 꽂힌 가와즈야가 앉아 있었음.
-                      </div>
-                      <div>
-                        <strong className="text-[#b48c36]">저택 구조:</strong>{' '}
-                        1층 응접실(축음기 및 편지 상자 보관)과 안쪽 자료실(K·R·M 사건 파일), 2층 손님용 침실과 탐정의 서재.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Interactive Clues Gallery (Click to Inspect) */}
-                <div className="p-5 bg-[#1a1411] border border-[#b48c36]/50 rounded-sm space-y-3 shadow-lg">
-                  <div className="flex items-center justify-between border-b border-[#3d3128] pb-2">
+                {/* Additional Background Information */}
+                <div className="p-5 sm:p-6 bg-[#1a1411] border border-[#b48c36]/50 rounded-sm shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#3d3128] pb-2.5">
                     <div className="flex items-center gap-2 text-[#d4af37]">
-                      <Search className="w-4 h-4" />
-                      <h4 className="font-bold text-sm font-title text-[#f5ede1]">
-                        현장 압수 증거물 정밀 감식 (클릭하여 확대경 검사)
-                      </h4>
+                      <Info className="w-5 h-5" />
+                      <h3 className="font-bold text-base text-[#f5ede1] font-title">
+                        추가 정보 (사건 배경 및 핵심 인물)
+                      </h3>
                     </div>
-                    <span className="text-[11px] text-[#a89988]">
-                      단서 4종 감식 완료
+                    <span className="text-[11px] px-2 py-0.5 border border-[#b48c36]/40 text-[#d4af37] bg-[#241c18] font-serif">
+                      제도 공통 지식
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
-                    {CRIME_SCENE_CLUES.map((clue) => (
-                      <button
-                        key={clue.id}
-                        onClick={() => {
-                          setSelectedClue(clue);
-                          playStampSlamSound();
-                        }}
-                        className="p-3 bg-[#231b16] border border-[#44362b] hover:border-[#d4af37] text-left rounded-sm transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer flex items-start gap-3 group"
-                      >
-                        <div className="w-10 h-10 rounded bg-[#140f0c] border border-[#b48c36]/40 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
-                          {clue.icon}
-                        </div>
-                        <div className="flex-1 min-w-0 text-xs">
-                          <div className="flex items-center justify-between gap-1 mb-0.5">
-                            <span className="font-bold text-[#f5ede1] truncate group-hover:text-[#d4af37] transition-colors">
-                              {clue.name}
-                            </span>
-                            <span className="text-[10px] text-[#a89988] shrink-0 border border-[#44362b] px-1 rounded-none">
-                              {clue.category}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-[#b8a995] line-clamp-1">
-                            {clue.description}
-                          </p>
-                          <div className="mt-1 text-[10px] text-[#d4af37] flex items-center gap-1 font-serif">
-                            <Search className="w-3 h-3" />
-                            <span>상세 감식 소견 보기 ➔</span>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans">
+                    {/* 1. 연쇄 살인마 까마귀 */}
+                    <div className="p-4 bg-[#211815] border border-[#9b2226]/60 rounded-sm space-y-2 hover:border-[#e63946] transition-colors shadow-md">
+                      <div className="flex items-center gap-2 text-[#e63946] border-b border-[#9b2226]/30 pb-1.5">
+                        <Feather className="w-4 h-4 shrink-0" />
+                        <h4 className="font-bold text-sm text-[#f5ede1] font-title">
+                          〈연쇄 살인마 까마귀〉
+                        </h4>
+                      </div>
+                      <div className="text-xs text-[#d8c8b4] leading-relaxed space-y-1">
+                        <p>10년 전, 제도에 나타나 3개월 동안 4명을 죽였다.</p>
+                        <p>이후, 한동안은 까마귀의 범행이 없었지만, 3년 전에 재발.</p>
+                        <p className="text-[#ffccd5]">이후는 수개월마다 까마귀의 피해자가 나타나, 3년간 12명을 죽였다.</p>
+                      </div>
+                    </div>
+
+                    {/* 2. 북쪽 대국과의 전쟁 */}
+                    <div className="p-4 bg-[#1e1916] border border-[#b48c36]/40 rounded-sm space-y-2 hover:border-[#d4af37] transition-colors shadow-md">
+                      <div className="flex items-center gap-2 text-[#d4af37] border-b border-[#3d3128] pb-1.5">
+                        <Swords className="w-4 h-4 shrink-0" />
+                        <h4 className="font-bold text-sm text-[#f5ede1] font-title">
+                          〈북쪽 대국과의 전쟁〉
+                        </h4>
+                      </div>
+                      <div className="text-xs text-[#d8c8b4] leading-relaxed space-y-1">
+                        <p>8년 전에 일어났던 전쟁으로, 본국이 승리했다.</p>
+                        <p className="text-[#b8a995]">단, 배상금을 받지 못하는 등, 완승이라고 말하기는 어려운 면도 있다.</p>
+                      </div>
+                    </div>
+
+                    {/* 3. 하세가와 다다노부 */}
+                    <div className="p-4 bg-[#1b1715] border border-[#b48c36]/40 rounded-sm space-y-2 hover:border-[#d4af37] transition-colors shadow-md">
+                      <div className="flex items-center gap-2 text-[#d4af37] border-b border-[#3d3128] pb-1.5">
+                        <Award className="w-4 h-4 shrink-0" />
+                        <h4 className="font-bold text-sm text-[#f5ede1] font-title">
+                          〈하세가와 다다노부〉
+                        </h4>
+                      </div>
+                      <div className="text-xs text-[#d8c8b4] leading-relaxed space-y-1">
+                        <p>육군 출신의 정치가이며, 북쪽 대국과의 전쟁에서 자국을 승리로 이끈 영웅.</p>
+                        <p className="text-[#c2b092]">이후, 강고한 정치적 기반을 손에 넣었지만, 최근에는 육군과의 관계가 악화되었다.</p>
+                      </div>
+                    </div>
+
+                    {/* 4. 난조 사토루 */}
+                    <div className="p-4 bg-[#1b1715] border border-[#457b9d]/60 rounded-sm space-y-2 hover:border-[#a8dadc] transition-colors shadow-md">
+                      <div className="flex items-center gap-2 text-[#a8dadc] border-b border-[#457b9d]/30 pb-1.5">
+                        <Scale className="w-4 h-4 shrink-0" />
+                        <h4 className="font-bold text-sm text-[#f5ede1] font-title">
+                          〈난조 사토루〉
+                        </h4>
+                      </div>
+                      <div className="text-xs text-[#d8c8b4] leading-relaxed space-y-1">
+                        <p>하세가와에게 대항하는, 반전파 정치가.</p>
+                        <p className="text-[#c2b092]">화족(귀족)인 난조 가문의 서양자(데릴사위)가 되면서 후원을 얻어 정치가가 되었다.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -788,22 +752,38 @@ export default function App() {
 
                           {isPublicExpanded && (
                             <div className="mt-2.5 p-3 bg-[#140f0d] border border-[#3d3128] rounded-sm text-xs space-y-2 text-[#d8c8b4] font-sans animate-fade-in leading-relaxed">
-                              <div>
-                                <strong className="text-[#f5ede1]">외모:</strong>{' '}
-                                {char.publicInfo.appearance}
-                              </div>
-                              <div>
-                                <strong className="text-[#f5ede1]">사건 당일 행적:</strong>{' '}
-                                {char.publicInfo.timeline}
-                              </div>
-                              <div>
-                                <strong className="text-[#f5ede1]">공개 증언:</strong>{' '}
-                                "{char.publicInfo.testimony}"
-                              </div>
-                              <div>
-                                <strong className="text-[#d4af37]">소지품:</strong>{' '}
-                                {char.publicInfo.belongings.join(', ')}
-                              </div>
+                              {char.publicInfo.text ? (
+                                <div className="whitespace-pre-line text-[#e8ded1] leading-relaxed">
+                                  {char.publicInfo.text}
+                                </div>
+                              ) : (
+                                <>
+                                  {char.publicInfo.appearance && (
+                                    <div>
+                                      <strong className="text-[#f5ede1]">외모:</strong>{' '}
+                                      {char.publicInfo.appearance}
+                                    </div>
+                                  )}
+                                  {char.publicInfo.timeline && (
+                                    <div>
+                                      <strong className="text-[#f5ede1]">사건 당일 행적:</strong>{' '}
+                                      {char.publicInfo.timeline}
+                                    </div>
+                                  )}
+                                  {char.publicInfo.testimony && (
+                                    <div>
+                                      <strong className="text-[#f5ede1]">공개 증언:</strong>{' '}
+                                      "{char.publicInfo.testimony}"
+                                    </div>
+                                  )}
+                                  {char.publicInfo.belongings && char.publicInfo.belongings.length > 0 && (
+                                    <div>
+                                      <strong className="text-[#d4af37]">소지품:</strong>{' '}
+                                      {char.publicInfo.belongings.join(', ')}
+                                    </div>
+                                  )}
+                                </>
+                              )}
                             </div>
                           )}
                         </div>

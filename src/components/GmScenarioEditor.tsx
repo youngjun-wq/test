@@ -88,10 +88,10 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
       avatarIcon: c.avatarIcon,
       password: defaultPasswords[c.id]?.pw || '1234',
       passwordHint: c.passwordHint || defaultPasswords[c.id]?.hint || '비밀번호: 1234',
-      appearance: c.publicInfo.appearance,
-      timeline: c.publicInfo.timeline,
-      testimony: c.publicInfo.testimony,
-      belongings: c.publicInfo.belongings.join(', '),
+      appearance: c.publicInfo.appearance || c.publicInfo.text || '',
+      timeline: c.publicInfo.timeline || '',
+      testimony: c.publicInfo.testimony || '',
+      belongings: c.publicInfo.belongings ? c.publicInfo.belongings.join(', ') : '',
       secretInfo: `[극비 진실과 개인 목표]
 - 인물: ${c.name}
 - 사건 당시 은밀한 행적과 당신의 숨겨진 비밀을 여기에 작성하십시오.`,
