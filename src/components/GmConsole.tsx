@@ -43,13 +43,13 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
       );
 
       // Support master passwords if user entered shortcut or direct admin password
-      if (!isValid && (entered === '뭉이5824' || entered === 'boardbang1930' || entered === '1930')) {
+      if (!isValid && (entered === '뭉이5824')) {
         isValid = true;
       }
 
       if (isValid) {
         setIsAuthenticated(true);
-        setVerifiedGmPassword(entered === '1930' || entered === 'boardbang1930' ? '뭉이5824' : entered);
+        setVerifiedGmPassword(entered ===  ? '뭉이5824' : entered);
         setAuthError(null);
       } else {
         setAuthError('관리자 비밀번호가 일치하지 않습니다. 인장이 거부되었습니다.');
