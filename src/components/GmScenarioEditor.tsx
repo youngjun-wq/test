@@ -65,18 +65,18 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
   const [editableChars, setEditableChars] = useState<EditableCharacter[]>(() => {
     // Default preset passwords and hints for characters
     const defaultPasswords: Record<string, { pw: string; hint: string }> = {
-      char_detective: { pw: '형사정', hint: '비밀번호: 형사정' },
-      char_thief: { pw: '괴도영', hint: '비밀번호: 괴도영' },
-      char_journalist: { pw: '기자준', hint: '비밀번호: 기자준' },
-      char_writer: { pw: '작가이', hint: '비밀번호: 작가이' },
-      char_assistant: { pw: '조수최', hint: '비밀번호: 조수최' },
-      char_cleaner: { pw: '청소부고', hint: '비밀번호: 청소부고' },
-      char_1: { pw: '형사정', hint: '비밀번호: 형사정' },
-      char_2: { pw: '괴도영', hint: '비밀번호: 괴도영' },
-      char_3: { pw: '기자준', hint: '비밀번호: 기자준' },
-      char_4: { pw: '작가이', hint: '비밀번호: 작가이' },
-      char_5: { pw: '조수최', hint: '비밀번호: 조수최' },
-      char_6: { pw: '청소부고', hint: '비밀번호: 청소부고' },
+      char_detective: { pw: '형사정', hint: '비밀번호: 별도전달' },
+      char_thief: { pw: '괴도영', hint: '비밀번호: 별도전달' },
+      char_journalist: { pw: '기자준', hint: '비밀번호: 별도전달' },
+      char_writer: { pw: '작가이', hint: '비밀번호: 별도전달' },
+      char_assistant: { pw: '조수최', hint: '비밀번호: 별도전달' },
+      char_cleaner: { pw: '청소부고', hint: '비밀번호: 별도전달' },
+      char_1: { pw: '형사정', hint: '비밀번호: 별도전달' },
+      char_2: { pw: '괴도영', hint: '비밀번호: 별도전달' },
+      char_3: { pw: '기자준', hint: '비밀번호: 별도전달' },
+      char_4: { pw: '작가이', hint: '비밀번호: 별도전달' },
+      char_5: { pw: '조수최', hint: '비밀번호: 별도전달' },
+      char_6: { pw: '청소부고', hint: '비밀번호: 별도전달' },
     };
 
     return scenario.characters.map((c) => ({
