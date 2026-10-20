@@ -101,13 +101,11 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
                   type="password"
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="관리자 암호 (기본: boardbang1930)"
                   autoFocus
                   className="w-full p-2.5 bg-[#120f0d] border border-[#b48c36]/60 text-[#f5ede1] text-sm tracking-wider rounded-sm focus:border-[#d4af37] focus:outline-none text-center"
                 />
               </div>
               <div className="text-[11px] text-[#7a6a5d] mt-1 text-center font-sans">
-                * 기본 비밀번호: boardbang1930
               </div>
             </div>
 
