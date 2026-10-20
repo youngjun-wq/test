@@ -1,15 +1,46 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface SilhouetteProps {
   type: string;
+  imageUrl?: string;
+  altName?: string;
   className?: string;
   size?: number;
 }
 
-export const CharacterSilhouette: React.FC<SilhouetteProps> = ({ type, className = '', size = 120 }) => {
+export const CharacterSilhouette: React.FC<SilhouetteProps> = ({
+  type,
+  imageUrl,
+  altName,
+  className = '',
+  size = 120,
+}) => {
+  const [imageError, setImageError] = useState(false);
+
+  // If a valid image URL is provided, display the character photo with a vintage portrait frame
+  if (imageUrl && !imageError) {
+    return (
+      <div
+        className={`relative flex items-center justify-center overflow-hidden border-2 border-[#b48c36]/70 bg-[#171310] shadow-md group rounded-sm ${className}`}
+        style={{ width: size, height: size * 1.25 }}
+      >
+        <img
+          src={imageUrl}
+          alt={altName || type}
+          className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+          onError={() => setImageError(true)}
+          loading="lazy"
+        />
+        {/* Subtle vintage film noir vignette & ornamental inner border */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25 pointer-events-none" />
+        <div className="absolute inset-0.5 border border-[#b48c36]/40 pointer-events-none" />
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`relative flex items-center justify-center overflow-hidden border border-[#b48c36]/40 bg-[#171310] ${className}`}
+      className={`relative flex items-center justify-center overflow-hidden border border-[#b48c36]/40 bg-[#171310] rounded-sm ${className}`}
       style={{ width: size, height: size * 1.25 }}
     >
       {/* Vintage Photo Corner Cuts & Vignette */}

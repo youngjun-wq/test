@@ -15,6 +15,8 @@ export interface CharacterData {
   name: string;
   roleTitle: string; // e.g., '베테랑 형사', '미모의 괴도'
   hanchaName?: string;
+  playerName?: string; // 실명 (예: '조준흠', '김승주')
+  imageUrl?: string; // 인물 초상화 사진 URL
   age: number | string;
   gender: '남' | '여' | '불명';
   occupation: string;

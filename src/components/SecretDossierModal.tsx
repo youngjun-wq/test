@@ -4,6 +4,7 @@ import { decryptAESGCM } from '../utils/crypto';
 import { playSealBreakSound, playTypewriterJamSound } from '../utils/sound';
 import { Lock, Eye, EyeOff, ShieldAlert, X, Copy, Check, Sparkles } from 'lucide-react';
 import { MarkdownViewer } from './MarkdownViewer';
+import { CharacterSilhouette } from './CharacterSilhouette';
 
 interface SecretDossierModalProps {
   character: CharacterData;
@@ -120,7 +121,7 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
               極秘 封印
             </span>
             <span className="text-sm font-semibold tracking-wide text-[#d4af37]">
-              {character.name} 귀하의 밀서
+              {character.playerName ? `${character.playerName} 님 (${character.name}) 극비 서신` : `${character.name} 귀하의 밀서`}
             </span>
           </div>
 
@@ -138,11 +139,28 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
           {!decryptedSecret ? (
             /* SEALED STATE */
             <div className="flex flex-col items-center text-center py-2">
+              {/* Character Portrait & Player Badge */}
+              <div className="flex flex-col items-center mb-2">
+                <div className="w-20 h-25 rounded-sm overflow-hidden border-2 border-[#b48c36] shadow-xl relative bg-[#171310]">
+                  <CharacterSilhouette
+                    type={character.avatarIcon}
+                    imageUrl={character.imageUrl}
+                    altName={character.name}
+                    size={80}
+                  />
+                </div>
+                {character.playerName && (
+                  <div className="mt-1.5 px-2.5 py-0.5 bg-[#800f13] border border-[#b48c36] text-xs font-bold text-[#f5ede1] rounded-sm font-serif shadow-sm">
+                    배정 플레이어: {character.playerName}
+                  </div>
+                )}
+              </div>
+
               {/* Wax Seal Graphic with Cracking Animation */}
-              <div className="relative my-4 flex items-center justify-center h-28">
+              <div className="relative my-3 flex items-center justify-center h-24">
                 {isCrackingSeal ? (
                   /* Cracking animation: split into left & right pieces with dust particles */
-                  <div className="relative w-28 h-28 flex items-center justify-center">
+                  <div className="relative w-28 h-24 flex items-center justify-center">
                     <div className="absolute w-14 h-24 overflow-hidden -left-1 animate-wax-crack-left">
                       <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#800f13] via-[#a31621] to-[#470d10] border-2 border-[#b48c36]/60 flex items-center justify-center">
                         <span className="text-2xl font-bold font-serif text-[#f5ede1] drop-shadow-md ml-12">
@@ -162,8 +180,8 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
                     </div>
                   </div>
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#800f13] via-[#a31621] to-[#470d10] border-2 border-[#b48c36]/60 flex items-center justify-center shadow-lg relative hover:scale-105 transition-transform">
-                    <div className="w-18 h-18 rounded-full border border-dashed border-[#f5ede1]/40 flex flex-col items-center justify-center">
+                  <div className="w-22 h-22 rounded-full bg-gradient-to-br from-[#800f13] via-[#a31621] to-[#470d10] border-2 border-[#b48c36]/60 flex items-center justify-center shadow-lg relative hover:scale-105 transition-transform">
+                    <div className="w-16 h-16 rounded-full border border-dashed border-[#f5ede1]/40 flex flex-col items-center justify-center">
                       <span className="text-2xl font-bold font-serif text-[#f5ede1] drop-shadow-md">
                         封
                       </span>
@@ -176,7 +194,7 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
               </div>
 
               <h3 className="text-lg font-bold text-[#f5ede1] font-title mb-1">
-                『{character.name}』의 극비 밀서 봉인
+                『{character.name}』 {character.playerName ? `[${character.playerName} 님]` : ''}의 극비 밀서 봉인
               </h3>
               <p className="text-xs text-[#b8a995] max-w-sm mb-4 leading-relaxed">
                 이 서신에는 본 사건의 진실과 귀하만의 치명적인 비밀, 개인 승리 목표가 암호화되어 기록되어 있습니다.
@@ -261,16 +279,34 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
                   極 秘
                 </div>
 
-                <div className="border-b border-[#2b241e]/20 pb-2 mb-4">
-                  <div className="text-[10px] tracking-widest text-[#7a6a5d] uppercase">
-                    CONFIDENTIAL DOSSIER · 探偵禁止區域 (탐정금지구역)
+                <div className="border-b border-[#2b241e]/20 pb-3 mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] tracking-widest text-[#7a6a5d] uppercase font-sans font-semibold">
+                      CONFIDENTIAL DOSSIER · 探偵禁止區域 (탐정금지구역)
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <h4 className="text-xl font-bold font-title text-[#1c1917]">
+                        {character.name} {character.hanchaName ? `(${character.hanchaName})` : ''} 귀하
+                      </h4>
+                      {character.playerName && (
+                        <span className="text-xs px-2 py-0.5 bg-[#800f13] text-[#f5ede1] font-bold font-serif rounded-sm shadow-sm">
+                          담당: {character.playerName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-[#57483b] mt-1 font-sans">
+                      직업: {character.occupation} · 나이: {character.age}세
+                    </div>
                   </div>
-                  <h4 className="text-xl font-bold font-title text-[#1c1917] mt-1">
-                    {character.name} {character.hanchaName ? `(${character.hanchaName})` : ''} 귀하
-                  </h4>
-                  <div className="text-xs text-[#57483b] mt-0.5">
-                    직업: {character.occupation} · 나이: {character.age}세
-                  </div>
+                  {character.imageUrl && (
+                    <div className="w-14 h-18 shrink-0 rounded-sm overflow-hidden border-2 border-[#b48c36] shadow-md bg-[#1a1512]">
+                      <img
+                        src={character.imageUrl}
+                        alt={character.playerName || character.name}
+                        className="w-full h-full object-cover object-top"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Secret Content with Rich Vintage Styling */}

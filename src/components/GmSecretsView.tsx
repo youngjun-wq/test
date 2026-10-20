@@ -104,14 +104,24 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
                 className="w-full p-3 sm:p-4 flex items-center justify-between text-left hover:bg-[#241c18] transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-12 overflow-hidden shrink-0 border border-[#b48c36]/40">
-                    <CharacterSilhouette type={char.avatarIcon} size={40} />
+                  <div className="w-11 h-14 overflow-hidden shrink-0 border border-[#b48c36]/60 rounded-sm shadow-sm bg-[#171310]">
+                    <CharacterSilhouette
+                      type={char.avatarIcon}
+                      imageUrl={char.imageUrl}
+                      altName={char.name}
+                      size={44}
+                    />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-base text-[#f5ede1] font-title">
                         {char.name} {char.hanchaName ? `(${char.hanchaName})` : ''}
                       </span>
+                      {char.playerName && (
+                        <span className="text-xs font-bold text-[#f5ede1] bg-[#800f13] border border-[#b48c36] px-2 py-0.5 rounded-sm font-serif shadow-sm">
+                          플레이어: {char.playerName}
+                        </span>
+                      )}
                       <span className="text-xs text-[#a89988]">
                         {char.occupation} · {char.age}세
                       </span>
@@ -119,7 +129,10 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
                     {char.passwordHint && (
                       <div className="text-[11px] text-[#d4af37] flex items-center gap-1 mt-0.5">
                         <KeyRound className="w-3 h-3 text-[#d4af37]" />
-                        <span>플레이어 역할 암호: {char.passwordHint.replace('비밀번호:', '').trim()}</span>
+                        <span>
+                          {char.playerName ? `[${char.playerName} 전용 암호] ` : '플레이어 역할 암호: '}
+                          {char.passwordHint.replace('비밀번호:', '').trim()}
+                        </span>
                       </div>
                     )}
                   </div>

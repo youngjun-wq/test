@@ -9,7 +9,14 @@ import { PhaseStoryBook } from './components/PhaseStoryBook';
 import { RoomSyncModal } from './components/RoomSyncModal';
 import { getActiveRoomId, DEFAULT_ROOM_ID } from './utils/mqttSync';
 import { isSoundEnabled, setSoundEnabled, playBrassChime, playPageFlipSound, playStampSlamSound } from './utils/sound';
-import { initCrossDeviceSync, fetchLatestState, SERVER_SYNC_STATUS_EVENT } from './utils/phaseStorage';
+import {
+  initCrossDeviceSync,
+  fetchLatestState,
+  SERVER_SYNC_STATUS_EVENT,
+  PHASE_VISIBILITY_EVENT,
+  getStoredPhaseVisibility,
+  PhaseVisibilityMap,
+} from './utils/phaseStorage';
 import {
   Compass,
   FileText,
@@ -114,6 +121,15 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed?.id === defaultScenario.id) {
+          // Merge characters to ensure assigned real player names and images are always preserved
+          parsed.characters = parsed.characters.map((pc: CharacterData) => {
+            const dc = defaultScenario.characters.find(c => c.id === pc.id);
+            return {
+              ...pc,
+              playerName: pc.playerName || dc?.playerName,
+              imageUrl: pc.imageUrl || dc?.imageUrl,
+            };
+          });
           return parsed;
         }
       }
@@ -163,6 +179,26 @@ export default function App() {
       window.removeEventListener(SERVER_SYNC_STATUS_EVENT, handleSyncStatus);
     };
   }, []);
+
+  // Phase visibility tracker to reveal phase-restricted objectives (e.g. 4장 조사 페이즈 오픈 시 #표 목적 노출)
+  const [phaseVisibility, setPhaseVisibility] = useState<PhaseVisibilityMap>(() =>
+    getStoredPhaseVisibility()
+  );
+
+  useEffect(() => {
+    const handlePhaseChange = (e: any) => {
+      if (e.detail) {
+        setPhaseVisibility(e.detail);
+      }
+    };
+    window.addEventListener(PHASE_VISIBILITY_EVENT, handlePhaseChange);
+    return () => window.removeEventListener(PHASE_VISIBILITY_EVENT, handlePhaseChange);
+  }, []);
+
+  // Check if 4장 조사 페이즈 is opened either via phase unlock or active phase index
+  const isInvestigate4Open =
+    !!(phaseVisibility['phase_9_investigate4'] || phaseVisibility['phase_4_investigate']) ||
+    currentPhaseIndex >= 9;
 
   const handleToggleSound = () => {
     const next = !soundOn;
@@ -379,6 +415,42 @@ export default function App() {
                   <div className="text-[10px] text-[#800f13] font-bold mt-2 pt-1 border-t border-[#2b241e]/20">
                     사인: {scenario.victim.causeOfDeath.split('(')[0]}
                   </div>
+                </div>
+              </div>
+
+              {/* 6 Assigned Players Strip */}
+              <div className="my-5 p-3.5 bg-[#ebe4d3]/85 border-2 border-[#1c1917]/40 shadow-sm">
+                <div className="flex items-center justify-between border-b border-[#1c1917]/20 pb-1.5 mb-2.5">
+                  <span className="text-xs font-bold text-[#800f13] font-serif flex items-center gap-1.5">
+                    <span>👥</span>
+                    <span>사건 당일 소환된 6인의 주요 용의자 및 플레이어 배정 현황</span>
+                  </span>
+                  <span className="text-[11px] text-[#614f41] font-sans">
+                    초상화 및 배정 인물
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-center">
+                  {scenario.characters.map((c) => (
+                    <div key={c.id} className="p-2 bg-[#f6f0e2] border border-[#b48c36]/40 shadow-xs flex flex-col items-center">
+                      <div className="w-14 h-18 overflow-hidden rounded-sm border border-[#b48c36] shadow-inner mb-1.5 bg-[#1a1512]">
+                        <CharacterSilhouette
+                          type={c.avatarIcon}
+                          imageUrl={c.imageUrl}
+                          altName={c.name}
+                          size={56}
+                        />
+                      </div>
+                      <div className="text-xs font-bold text-[#1c1917] font-serif">
+                        {c.playerName || c.name}
+                      </div>
+                      <div className="text-[11px] text-[#800f13] font-sans font-medium">
+                        {c.name}
+                      </div>
+                      <div className="text-[10px] text-[#7a6a5d]">
+                        {c.groupName}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -681,12 +753,17 @@ export default function App() {
                         <div className="p-4 sm:p-5 flex gap-4">
                           {/* Silhouette Frame */}
                           <div className="shrink-0">
-                            <CharacterSilhouette type={char.avatarIcon} size={76} />
+                            <CharacterSilhouette
+                              type={char.avatarIcon}
+                              imageUrl={char.imageUrl}
+                              altName={char.name}
+                              size={76}
+                            />
                           </div>
 
                           {/* Identity Details */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="text-lg font-bold font-title text-[#f5ede1]">
                                 {char.name}
                               </h4>
@@ -695,7 +772,13 @@ export default function App() {
                                   ({char.hanchaName})
                                 </span>
                               )}
-                              <span className="text-[11px] px-1.5 py-0.2 border border-[#b48c36]/50 text-[#d4af37] bg-[#241c18]">
+                              {char.playerName && (
+                                <span className="text-xs font-bold text-[#f5ede1] bg-[#800f13] border border-[#b48c36] px-2 py-0.5 rounded-sm shadow-sm flex items-center gap-1 font-serif">
+                                  <span className="text-[10px] text-[#e2c7a4]">플레이어</span>
+                                  <span>{char.playerName}</span>
+                                </span>
+                              )}
+                              <span className="text-[11px] px-1.5 py-0.5 border border-[#b48c36]/50 text-[#d4af37] bg-[#241c18]">
                                 {char.gender} / {char.age}세
                               </span>
                             </div>
@@ -721,8 +804,8 @@ export default function App() {
                                   면담: {char.interviewTime}
                                 </span>
                               )}
-                              {char.hasSharpObjective && (
-                                <span className="text-[10px] text-[#ffccd5] bg-[#9b2226]/40 border border-[#9b2226] px-1 py-0.2 font-serif">
+                              {char.hasSharpObjective && isInvestigate4Open && (
+                                <span className="text-[10px] text-[#ffccd5] bg-[#9b2226]/40 border border-[#9b2226] px-1 py-0.2 font-serif animate-fade-in">
                                   #표 목적 보유
                                 </span>
                               )}
@@ -790,8 +873,13 @@ export default function App() {
 
                         {/* Card Bottom: Secret Dossier Trigger Button */}
                         <div className="p-3 bg-[#241c18] border-t border-[#b48c36]/30 flex flex-wrap items-center justify-between gap-2">
-                          <div className="text-[11px] text-[#a89988] font-mono">
-                            {char.passwordHint || '역할 비밀번호 필요'}
+                          <div className="text-[11px] text-[#a89988] font-mono flex items-center gap-2">
+                            {char.playerName && (
+                              <span className="text-[#d4af37] font-serif font-bold">
+                                [{char.playerName} 전용]
+                              </span>
+                            )}
+                            <span>{char.passwordHint || '역할 비밀번호 필요'}</span>
                           </div>
 
                           <button
@@ -799,7 +887,7 @@ export default function App() {
                             className="py-2 px-3.5 bg-gradient-to-r from-[#800f13] to-[#590d10] hover:brightness-110 active:scale-[0.98] text-[#f5ede1] text-xs font-bold border border-[#b48c36] shadow-md flex items-center gap-1.5 cursor-pointer transition-all"
                           >
                             <Lock className="w-3.5 h-3.5 text-[#d4af37]" />
-                            <span>밀서 열람 (極秘)</span>
+                            <span>{char.playerName ? `${char.playerName} 밀서 열람` : '밀서 열람 (極秘)'}</span>
                           </button>
                         </div>
                       </div>

@@ -7,6 +7,8 @@ import { Save, Copy, Check, Plus, Trash2, Download, Upload, Sparkles, RefreshCw,
 interface EditableCharacter {
   id: string;
   name: string;
+  playerName?: string;
+  imageUrl?: string;
   roleTitle?: string;
   group?: 'carriage' | 'train';
   groupName?: string;
@@ -53,7 +55,7 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
   const [victimCrimeScene, setVictimCrimeScene] = useState(scenario.victim.crimeScene);
 
   // GM Password setting
-  const [adminPassword, setAdminPassword] = useState(currentGmPassword || 'boardbang1930');
+  const [adminPassword, setAdminPassword] = useState(currentGmPassword || '뭉이5824');
 
   // OCR Scanner Modal State
   const [showOcrScanner, setShowOcrScanner] = useState(false);
@@ -63,23 +65,30 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
   const [editableChars, setEditableChars] = useState<EditableCharacter[]>(() => {
     // Default preset passwords and hints for characters
     const defaultPasswords: Record<string, { pw: string; hint: string }> = {
-      char_detective: { pw: '형사', hint: '비밀번호: 형사 (또는 1920)' },
-      char_thief: { pw: '괴도', hint: '비밀번호: 괴도 (또는 2048)' },
-      char_journalist: { pw: '기자', hint: '비밀번호: 기자 (또는 3104)' },
-      char_writer: { pw: '작가', hint: '비밀번호: 작가 (또는 4821)' },
-      char_assistant: { pw: '조수', hint: '비밀번호: 조수 (또는 5279)' },
-      char_cleaner: { pw: '청소부', hint: '비밀번호: 청소부 (또는 6832)' },
-      char_1: { pw: '형사', hint: '비밀번호: 형사 (또는 1920)' },
-      char_2: { pw: '괴도', hint: '비밀번호: 괴도 (또는 2048)' },
-      char_3: { pw: '기자', hint: '비밀번호: 기자 (또는 3104)' },
-      char_4: { pw: '작가', hint: '비밀번호: 작가 (또는 4821)' },
-      char_5: { pw: '조수', hint: '비밀번호: 조수 (또는 5279)' },
-      char_6: { pw: '청소부', hint: '비밀번호: 청소부 (또는 6832)' },
+      char_detective: { pw: '형사정', hint: '비밀번호: 형사정' },
+      char_thief: { pw: '괴도영', hint: '비밀번호: 괴도영' },
+      char_journalist: { pw: '기자준', hint: '비밀번호: 기자준' },
+      char_writer: { pw: '작가이', hint: '비밀번호: 작가이' },
+      char_assistant: { pw: '조수최', hint: '비밀번호: 조수최' },
+      char_cleaner: { pw: '청소부고', hint: '비밀번호: 청소부고' },
+      char_1: { pw: '형사정', hint: '비밀번호: 형사정' },
+      char_2: { pw: '괴도영', hint: '비밀번호: 괴도영' },
+      char_3: { pw: '기자준', hint: '비밀번호: 기자준' },
+      char_4: { pw: '작가이', hint: '비밀번호: 작가이' },
+      char_5: { pw: '조수최', hint: '비밀번호: 조수최' },
+      char_6: { pw: '청소부고', hint: '비밀번호: 청소부고' },
     };
 
     return scenario.characters.map((c) => ({
       id: c.id,
       name: c.name,
+      playerName: c.playerName || '',
+      imageUrl: c.imageUrl || '',
+      roleTitle: c.roleTitle || '',
+      group: c.group || 'carriage',
+      groupName: c.groupName || (c.group === 'carriage' ? '마차조' : '기차조'),
+      interviewTime: c.interviewTime || '',
+      hasSharpObjective: c.hasSharpObjective,
       hanchaName: c.hanchaName || '',
       age: c.age,
       gender: c.gender,
@@ -168,6 +177,8 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
         compiledCharacters.push({
           id: ec.id,
           name: ec.name,
+          playerName: ec.playerName || undefined,
+          imageUrl: ec.imageUrl || undefined,
           roleTitle: ec.roleTitle || ec.occupation,
           group: ec.group || 'carriage',
           groupName: ec.groupName || (ec.group === 'carriage' ? '마차조' : '기차조'),
@@ -602,6 +613,32 @@ ${editableChars.map((c) => `- [${c.name}] (${c.occupation}) : 비밀번호 "${c.
                   value={activeChar.password}
                   onChange={(e) => updateActiveChar('password', e.target.value)}
                   className="w-full p-2 bg-[#1a1512] border border-[#e63946] text-[#ff8fa3] font-bold rounded-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#d4af37] font-bold mb-1">
+                  배정 플레이어 실명 (이름)
+                </label>
+                <input
+                  type="text"
+                  value={activeChar.playerName || ''}
+                  onChange={(e) => updateActiveChar('playerName', e.target.value)}
+                  placeholder="예: 조준흠, 김승주"
+                  className="w-full p-2 bg-[#1a1512] border border-[#b48c36] text-[#f5ede1] rounded-sm"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[#d4af37] mb-1">
+                  인물 초상화 이미지 URL
+                </label>
+                <input
+                  type="text"
+                  value={activeChar.imageUrl || ''}
+                  onChange={(e) => updateActiveChar('imageUrl', e.target.value)}
+                  placeholder="예: https://i.imgur.com/..."
+                  className="w-full p-2 bg-[#1a1512] border border-[#5a483a] text-[#f5ede1] rounded-sm text-xs font-mono"
                 />
               </div>
             </div>

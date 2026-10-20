@@ -15,19 +15,27 @@ export const SERVER_SYNC_STATUS_EVENT = 'boardbang_server_sync_status';
 export const DEFAULT_UNLOCKED_PHASES: PhaseVisibilityMap = {
   phase_0_opening: true,
   phase_1_travel: true,
-  phase_intro: false,
-  phase_interlude1: false,
-  phase_2_talk: false,
-  phase_interlude2: false,
-  phase_3_investigate: false,
-  phase_3_talk: false,
-  phase_interlude3: false,
-  phase_4_investigate: false,
-  phase_4_talk: false,
-  phase_all_meeting: false,
-  phase_deduction_vote: false,
-  phase_ending: false,
+  phase_2_intro: false,
+  phase_3_interlude1: false,
+  phase_4_talk2: false,
+  phase_5_interlude2: false,
+  phase_6_investigate3: false,
+  phase_7_talk3: false,
+  phase_8_interlude3: false,
+  phase_9_investigate4: false,
+  phase_10_talk4: false,
+  phase_11_council: false,
+  phase_12_deduction: false,
+  phase_13_ending: false,
 };
+
+/**
+ * Checks if 4장 조사 페이즈 (phase_9_investigate4) is currently unlocked/open
+ */
+export function isPhase4InvestigateUnlocked(): boolean {
+  const map = getStoredPhaseVisibility();
+  return !!(map['phase_9_investigate4'] || map['phase_4_investigate']);
+}
 
 /**
  * Load phase visibility state from localStorage with fallback

@@ -143,7 +143,25 @@ export const DetectiveNotebook: React.FC<DetectiveNotebookProps> = ({ characters
                   </div>
                 )}
 
-                <div className="font-bold truncate text-[#f5ede1] z-10">{char.name}</div>
+                <div className="flex items-center gap-2 z-10 min-w-0">
+                  {char.imageUrl && (
+                    <img
+                      src={char.imageUrl}
+                      alt={char.playerName || char.name}
+                      className="w-7 h-8 object-cover object-top rounded-sm border border-[#b48c36]/60 shrink-0 shadow-xs"
+                    />
+                  )}
+                  <div className="truncate">
+                    <div className="font-bold truncate text-[#f5ede1]">
+                      {char.playerName || char.name}
+                    </div>
+                    {char.playerName && (
+                      <div className="text-[10px] text-[#d4af37] truncate font-sans">
+                        {char.name}
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <div className="text-[10px] mt-2 flex items-center justify-between opacity-90 z-10">
                   <span>{statusText}</span>
                   {status === 'culprit' && <AlertCircle className="w-3.5 h-3.5 text-[#e63946]" />}
