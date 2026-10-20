@@ -213,7 +213,6 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
                     placeholder="역할 비밀번호 입력"
                     autoFocus
                     className="w-full px-4 py-2.5 pr-10 bg-[#120f0d] border border-[#b48c36]/60 rounded-sm text-center text-sm tracking-wider text-[#f5ede1] placeholder:text-[#6a5e55] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
