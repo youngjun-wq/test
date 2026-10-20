@@ -49,7 +49,7 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
 
       if (isValid) {
         setIsAuthenticated(true);
-        setVerifiedGmPassword(entered ===  ? '뭉이5824' : entered);
+        setVerifiedGmPassword(entered ? '뭉이5824' : entered);
         setAuthError(null);
       } else {
         setAuthError('관리자 비밀번호가 일치하지 않습니다. 인장이 거부되었습니다.');
