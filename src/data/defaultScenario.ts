@@ -36,16 +36,13 @@ export const defaultScenario: ScenarioData = {
       "name": "베테랑 형사",
       "playerName": "조준흠",
       "imageUrl": "https://i.imgur.com/lhl5LzD.jpeg",
-      "roleTitle": "경시청 수사과 베테랑 형사",
       "hanchaName": "刑事",
       "age": 48,
       "gender": "남",
-      "occupation": "경시청 수사과 형사",
       "summary": "발로 정보를 모으는 것을 신조로 삼는 베테랑 형사. 출신은 간사이지만, 3년 전 제도에서 딸이 살해당한 일을 이유로 이동을 신청했다. 이후, 제도에서 살인 사건을 담당하고 있다. 탐정 가와즈야 세이지로와는 수사의 일환으로 알게 되어 친해졌다.",
       "avatarIcon": "detective",
       "group": "carriage",
       "groupName": "마차조",
-      "passwordHint": "비밀번호: 형사정",
       "publicInfo": {
         "text": "발로 정보를 모으는 것을 신조로 삼는 베테랑 형사.\n출신은 간사이지만, 3년 전 제도에서 딸이 살해당한 일을 이유로 이동을 신청했다.\n이후, 제도에서 살인 사건을 담당하고 있다.\n탐정 가와즈야 세이지로와는 수사의 일환으로 알게 되어 친해졌다."
       },
@@ -70,7 +67,6 @@ export const defaultScenario: ScenarioData = {
       "name": "미모의 괴도",
       "playerName": "김승주",
       "imageUrl": "https://i.imgur.com/JoEUY3k.jpeg",
-      "roleTitle": "미술품 & 보석 전문 괴도",
       "hanchaName": "怪盜",
       "age": 29,
       "gender": "여",
@@ -79,7 +75,6 @@ export const defaultScenario: ScenarioData = {
       "avatarIcon": "thief",
       "group": "carriage",
       "groupName": "마차조",
-      "passwordHint": "비밀번호: 괴도영",
       "publicInfo": {
         "text": "타이트한 남성용 세 벌 갖춤 슈트를 입은, 미술품과 보석 전문의 아름다운 괴도.\n매우 높은 운동 능력과 마법과도 같은 변장 기술을 지닌다.\n따라서 당당히 대낮의 제도를 활보하면서도, 경찰에 붙잡힌 적은 한 번도 없다."
       },
@@ -104,7 +99,6 @@ export const defaultScenario: ScenarioData = {
       "name": "전직 기자",
       "playerName": "홍승표",
       "imageUrl": "https://i.imgur.com/vgV55NR.jpeg",
-      "roleTitle": "대형 신문사 전직 사회부 기자",
       "hanchaName": "記者",
       "age": 27,
       "gender": "남",
@@ -114,7 +108,6 @@ export const defaultScenario: ScenarioData = {
       "group": "train",
       "groupName": "기차조",
       "hasSharpObjective": true,
-      "passwordHint": "비밀번호: 기자준",
       "publicInfo": {
         "text": "3년 전까지 대형 신문사의 기자로 근무했었다.\n「탐정을 동경한다」는 것을 이유로 직장을 떠나, 지금은 탐정 수습생을 자칭한다.\n하지만 탐정으로서의 실적은 아직 없다.\n조수를 부러워하며 「나도 가와즈야에게 고용되고 싶다」고 주위에 자주 이야기한다."
       },
@@ -139,7 +132,6 @@ export const defaultScenario: ScenarioData = {
       "name": "작가",
       "playerName": "김예린",
       "imageUrl": "https://i.imgur.com/ZlIrGAE.jpeg",
-      "roleTitle": "천재 추리소설가",
       "hanchaName": "作家",
       "age": 28,
       "gender": "여",
@@ -148,7 +140,6 @@ export const defaultScenario: ScenarioData = {
       "avatarIcon": "writer",
       "group": "train",
       "groupName": "기차조",
-      "passwordHint": "비밀번호: 작가이",
       "publicInfo": {
         "text": "젊은 나이에 그 글재주를 인정받아, 십대에 저명한 동인지에 단편 소설을 발표했다.\n하지만 정신적인 병을 얻은 이후, 벌써 10년 동안이나 작품을 발표하지 않았다.\n현재는 항상 무언가에 겁먹은 모습이며, 현실과 공상을 혼동하는 모습도 보인다.\n질 좋은 기모노를 입고 있어, 경제적으로 어려움은 없어 보인다."
       },
@@ -173,7 +164,6 @@ export const defaultScenario: ScenarioData = {
       "name": "조수",
       "playerName": "이준수",
       "imageUrl": "https://i.imgur.com/6lMA6qn.jpeg",
-      "roleTitle": "명탐정 가와즈야의 전 조수",
       "hanchaName": "助手",
       "age": 18,
       "gender": "여",
@@ -182,7 +172,6 @@ export const defaultScenario: ScenarioData = {
       "avatarIcon": "assistant",
       "group": "train",
       "groupName": "기차조",
-      "passwordHint": "비밀번호: 조수최",
       "publicInfo": {
         "text": "원래 하녀로, 탐정 가와즈야 세이지로에게 고용되었다.\n그 후, 명석한 두뇌가 그의 마음에 들어, 탐정업을 돕게 되었다.\n하지만 반년 정도 전, 가와즈야로부터의 지시로 그와 거리를 두고 있다.\n이후, 제도의 호텔에서 지내며, 종종 전보로 도착하는 가와즈야의 지시에 따라왔다."
       },
@@ -207,17 +196,15 @@ export const defaultScenario: ScenarioData = {
       "name": "청소부",
       "playerName": "김준태",
       "imageUrl": "https://i.imgur.com/785n8cy.jpeg",
-      "roleTitle": "정체불명의 왜소한 노인",
       "hanchaName": "淸掃夫",
       "age": 65,
       "gender": "남",
-      "occupation": "자칭 청소부 / 실업가",
+      "occupation": "자칭 청소부",
       "summary": "청소부를 자칭하는, 정체불명의 왜소한 노인. 맵시가 좋아, 분명 자산가일 것으로 예상할 수 있다.",
       "avatarIcon": "cleaner",
       "group": "carriage",
       "groupName": "마차조",
       "hasSharpObjective": true,
-      "passwordHint": "비밀번호: 청소부고",
       "publicInfo": {
         "text": "청소부를 자칭하는, 정체불명의 왜소한 노인. 맵시가 좋아, 분명 자산가일 것으로 예상할 수 있다."
       },
