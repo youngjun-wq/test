@@ -203,7 +203,6 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
               {/* Password Hint */}
               {character.passwordHint && (
                 <div className="mb-4 px-3 py-1.5 bg-[#27201b] border border-[#b48c36]/30 text-[11px] text-[#d4af37] rounded-sm font-serif">
-                  <span className="opacity-70 mr-1.5">【암호 안내】</span>
                   {character.passwordHint}
                 </div>
               )}
