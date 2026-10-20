@@ -199,18 +199,11 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
               <p className="text-xs text-[#b8a995] max-w-sm mb-4 leading-relaxed">
                 이 서신에는 본 사건의 진실과 귀하만의 치명적인 비밀, 개인 승리 목표가 암호화되어 기록되어 있습니다.
               </p>
-
-              {/* Password Hint */}
-              {character.passwordHint && (
-                <div className="mb-4 px-3 py-1.5 bg-[#27201b] border border-[#b48c36]/30 text-[11px] text-[#d4af37] rounded-sm font-serif">
-                  {character.passwordHint}
-                </div>
-              )}
-
               {/* Password Form */}
               <form onSubmit={handleUnlock} className="w-full max-w-xs space-y-3">
                 <div className="relative">
                   <input
+                     type={showPassword ? 'text' : 'password'}
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
                     placeholder="역할 비밀번호 입력"
