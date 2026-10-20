@@ -879,7 +879,6 @@ export default function App() {
                                 [{char.playerName} 전용]
                               </span>
                             )}
-                            <span>{char.passwordHint || '역할 비밀번호 필요'}</span>
                           </div>
 
                           <button
