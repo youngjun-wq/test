@@ -130,7 +130,6 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
                       <div className="text-[11px] text-[#d4af37] flex items-center gap-1 mt-0.5">
                         <KeyRound className="w-3 h-3 text-[#d4af37]" />
                         <span>
-                          {char.playerName ? `[${char.playerName} 전용 암호] ` : '플레이어 역할 암호: '}
                           {char.passwordHint.replace('비밀번호:', '').trim()}
                         </span>
                       </div>
