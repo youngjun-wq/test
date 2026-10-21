@@ -10,6 +10,15 @@ interface GmSecretsViewProps {
   gmPassword: string;
 }
 
+const DEFAULT_CHAR_PASSWORDS: Record<string, string> = {
+  char_detective: 'haha010',
+  char_thief: 'hoho4258',
+  char_journalist: 'hehe5824',
+  char_writer: 'chacha010',
+  char_assistant: 'chacha4258',
+  char_cleaner: 'chacha5824',
+};
+
 export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPassword }) => {
   const [decryptedMap, setDecryptedMap] = useState<Record<string, string>>({});
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
@@ -126,11 +135,11 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
                         {char.occupation} · {char.age}세
                       </span>
                     </div>
-                    {char.passwordHint && (
+                    {((char.passwordHint && char.passwordHint.replace('비밀번호:', '').trim()) || DEFAULT_CHAR_PASSWORDS[char.id]) && (
                       <div className="text-[11px] text-[#d4af37] flex items-center gap-1 mt-0.5">
                         <KeyRound className="w-3 h-3 text-[#d4af37]" />
                         <span>
-                          {char.passwordHint.replace('비밀번호:', '').trim()}
+                          비밀번호: {(char.passwordHint && char.passwordHint.replace('비밀번호:', '').trim()) || DEFAULT_CHAR_PASSWORDS[char.id]}
                         </span>
                       </div>
                     )}

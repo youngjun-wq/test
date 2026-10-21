@@ -55,7 +55,7 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
   const [victimCrimeScene, setVictimCrimeScene] = useState(scenario.victim.crimeScene);
 
   // GM Password setting
-  const [adminPassword, setAdminPassword] = useState(currentGmPassword || '뭉이5824');
+  const [adminPassword, setAdminPassword] = useState(currentGmPassword || 'jun5824');
 
   // OCR Scanner Modal State
   const [showOcrScanner, setShowOcrScanner] = useState(false);
@@ -65,18 +65,18 @@ export const GmScenarioEditor: React.FC<GmScenarioEditorProps> = ({
   const [editableChars, setEditableChars] = useState<EditableCharacter[]>(() => {
     // Default preset passwords and hints for characters
     const defaultPasswords: Record<string, { pw: string; hint: string }> = {
-      char_detective: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_thief: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_journalist: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_writer: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_assistant: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_cleaner: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_1: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_2: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_3: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_4: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_5: { pw: '별도전달', hint: '비밀번호: 별도전달' },
-      char_6: { pw: '별도전달', hint: '비밀번호: 별도전달' },
+      char_detective: { pw: 'haha010', hint: '' },
+      char_thief: { pw: 'hoho4258', hint: '' },
+      char_journalist: { pw: 'hehe5824', hint: '' },
+      char_writer: { pw: 'chacha010', hint: '' },
+      char_assistant: { pw: 'chacha4258', hint: '' },
+      char_cleaner: { pw: 'chacha5824', hint: '' },
+      char_1: { pw: 'haha010', hint: '' },
+      char_2: { pw: 'hoho4258', hint: '' },
+      char_3: { pw: 'hehe5824', hint: '' },
+      char_4: { pw: 'chacha010', hint: '' },
+      char_5: { pw: 'chacha4258', hint: '' },
+      char_6: { pw: 'chacha5824', hint: '' },
     };
 
     return scenario.characters.map((c) => ({

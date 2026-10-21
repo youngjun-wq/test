@@ -121,13 +121,16 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed?.id === defaultScenario.id) {
-          // Merge characters to ensure assigned real player names and images are always preserved
+          // Keep encrypted secrets & admin hash aligned with defaultScenario
+          parsed.adminPasswordHash = defaultScenario.adminPasswordHash;
           parsed.characters = parsed.characters.map((pc: CharacterData) => {
             const dc = defaultScenario.characters.find(c => c.id === pc.id);
             return {
               ...pc,
               playerName: pc.playerName || dc?.playerName,
               imageUrl: pc.imageUrl || dc?.imageUrl,
+              encryptedSecret: dc?.encryptedSecret || pc.encryptedSecret,
+              encryptedSecretForGm: dc?.encryptedSecretForGm || pc.encryptedSecretForGm,
             };
           });
           return parsed;
@@ -143,7 +146,12 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'cover' | 'player' | 'gm'>('cover');
 
   // Player tabs: 'phases' (14단계 스토리 & 룰), 'characters' (6인 용의자), 'synopsis' (사건 개요), 'notebook' (수사 메모)
-  const [playerTab, setPlayerTab] = useState<'phases' | 'characters' | 'synopsis' | 'notebook'>('phases');
+  const [playerTab, setPlayerTab] = useState<'phases' | 'characters' | 'synopsis' | 'notebook'>('characters');
+
+  // Scroll to top whenever view changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [currentView]);
 
   // Current game phase index (0 to 13)
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(0);
@@ -209,6 +217,7 @@ export default function App() {
   const handleTabChange = (tab: 'phases' | 'characters' | 'synopsis' | 'notebook') => {
     setPlayerTab(tab);
     playPageFlipSound();
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
 
   const handleUpdateScenario = (updated: ScenarioData) => {
@@ -314,6 +323,8 @@ export default function App() {
               <button
                 onClick={() => {
                   setCurrentView('player');
+                  setPlayerTab('characters');
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   playPageFlipSound();
                 }}
                 className="px-3 py-1.5 bg-[#251e18] hover:bg-[#342a22] border border-[#b48c36]/60 text-[#f5ede1] text-xs font-semibold rounded-sm transition-all cursor-pointer"
@@ -460,7 +471,8 @@ export default function App() {
                 <button
                   onClick={() => {
                     setCurrentView('player');
-                    setPlayerTab('synopsis');
+                    setPlayerTab('characters');
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                     playBrassChime();
                   }}
                   className="p-4 sm:p-5 bg-gradient-to-br from-[#800f13] to-[#590d10] text-[#f5ede1] border-2 border-[#2b241e] hover:brightness-110 active:scale-[0.99] transition-all flex flex-col justify-between text-left shadow-lg cursor-pointer group"
@@ -911,7 +923,11 @@ export default function App() {
             <GmConsole
               scenario={scenario}
               onUpdateScenario={handleUpdateScenario}
-              onExit={() => setCurrentView('player')}
+              onExit={() => {
+                setCurrentView('player');
+                setPlayerTab('characters');
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }}
             />
           </div>
         )}
