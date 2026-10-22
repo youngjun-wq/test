@@ -6,9 +6,10 @@ interface MarkdownViewerProps {
 }
 
 export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content, className = '' }) => {
-  // Parse inline text with bolding (**text**)
+  // Parse inline text with bolding (**text**) and Card badges (【추가 정보 카드...】)
   const renderInline = (text: string) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    // Regex matching bold **...**, card tags 【...】, and stars/hashes ★/#
+    const parts = text.split(/(\*\*[^*]+\*\*|【[^】]+】|★\s*달성[□]?|#\s*달성[□]?|달성□)/g);
     return parts.map((part, idx) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
@@ -17,11 +18,48 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content, classNa
           </strong>
         );
       }
+      if (part.startsWith('【') && part.endsWith('】')) {
+        const isCard = part.includes('추가 정보 카드') || part.includes('카드');
+        return (
+          <span
+            key={idx}
+            className={`inline-flex items-center gap-1 mx-1 px-2 py-0.5 font-bold font-serif text-xs rounded-xs shadow-xs ${
+              isCard
+                ? 'bg-[#800f13] text-[#fefae0] border border-[#d4af37]'
+                : 'bg-[#2b221d] text-[#e8dfcc] border border-[#b48c36]/60'
+            }`}
+          >
+            {isCard && <span className="text-[11px]">🎴</span>}
+            {part}
+          </span>
+        );
+      }
+      if (part.includes('★') || part.includes('#')) {
+        const isStar = part.includes('★');
+        return (
+          <span
+            key={idx}
+            className={`inline-block px-1.5 py-0.5 mx-1 font-bold text-xs rounded-xs border shadow-xs ${
+              isStar
+                ? 'bg-[#d4af37]/20 border-[#d4af37] text-[#9b6a00]'
+                : 'bg-[#9b2226]/20 border-[#9b2226] text-[#9b2226]'
+            }`}
+          >
+            {part}
+          </span>
+        );
+      }
       return part;
     });
   };
 
-  const lines = content.split('\n');
+  // Preprocess text to ensure card acquisition directives stand out as separate blocks
+  const normalizedContent = (content || '').replace(
+    /((?:당신은\s*)?(?:즉시\s*)?【추가 정보 카드[^】]+】(?:을|를)?\s*(?:획득한다|손에 넣는다|활용하자|확인해도 좋다)[^.\n]*\.?)/g,
+    '\n\n$1\n\n'
+  );
+
+  const lines = normalizedContent.split('\n');
   const elements: React.ReactNode[] = [];
 
   let currentList: string[] = [];
@@ -112,6 +150,33 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content, classNa
         <h2 key={`h2-${idx}`} className="font-bold text-xl sm:text-2xl text-[#800f13] my-3 pb-2 border-b-2 border-[#800f13] font-serif tracking-wide text-center">
           {renderInline(trimmed.slice(2))}
         </h2>
+      );
+      return;
+    }
+
+    // Special Callout for Card Actions / Card Acquisition
+    const isCardAction =
+      (trimmed.includes('【추가 정보 카드') || trimmed.includes('추가 정보 카드 No.')) &&
+      (trimmed.includes('획득') || trimmed.includes('받을 가능성') || trimmed.includes('활용') || trimmed.includes('확인') || trimmed.includes('가져갈 경우'));
+
+    if (isCardAction) {
+      elements.push(
+        <div
+          key={`card-box-${idx}`}
+          className="my-3.5 p-3.5 bg-gradient-to-r from-[#fbf2dd] to-[#f5e5c7] border-2 border-[#b48c36] shadow-md rounded-xs text-[#1c1917] flex items-start gap-3 relative overflow-hidden font-sans"
+        >
+          <div className="w-8 h-8 rounded-full bg-[#800f13] border-2 border-[#d4af37] text-white flex items-center justify-center shrink-0 text-base shadow-sm mt-0.5 animate-pulse">
+            🎴
+          </div>
+          <div className="flex-1">
+            <div className="text-[11px] font-bold font-serif text-[#800f13] tracking-wider uppercase mb-1 flex items-center gap-1.5">
+              <span>[추가 정보 카드 액션 안내]</span>
+            </div>
+            <div className="text-xs sm:text-sm font-semibold leading-relaxed text-[#1c1917]">
+              {renderInline(trimmed)}
+            </div>
+          </div>
+        </div>
       );
       return;
     }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScenarioData } from '../types/scenario';
 import { verifyPassword } from '../utils/crypto';
 import { GmTimer } from './GmTimer';
@@ -11,19 +11,34 @@ interface GmConsoleProps {
   scenario: ScenarioData;
   onUpdateScenario: (updated: ScenarioData) => void;
   onExit: () => void;
+  currentPhaseIndex?: number;
+  onPhaseChange?: (idx: number) => void;
 }
 
 export const GmConsole: React.FC<GmConsoleProps> = ({
   scenario,
   onUpdateScenario,
   onExit,
+  currentPhaseIndex: propPhaseIndex = 0,
+  onPhaseChange,
 }) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'timer' | 'storybook' | 'secrets' | 'editor'>('timer');
   const [verifiedGmPassword, setVerifiedGmPassword] = useState<string>('');
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(0);
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(propPhaseIndex);
+
+  useEffect(() => {
+    if (typeof propPhaseIndex === 'number') {
+      setCurrentPhaseIndex(propPhaseIndex);
+    }
+  }, [propPhaseIndex]);
+
+  const handlePhaseChangeInternal = (idx: number) => {
+    setCurrentPhaseIndex(idx);
+    onPhaseChange?.(idx);
+  };
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -238,7 +253,7 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
           <div className="space-y-4">
             <GmTimer
               initialMinutes={scenario.defaultTimerMinutes || 15}
-              onPhaseChange={(idx) => setCurrentPhaseIndex(idx)}
+              onPhaseChange={handlePhaseChangeInternal}
             />
           </div>
         )}
@@ -247,7 +262,7 @@ export const GmConsole: React.FC<GmConsoleProps> = ({
           <div className="space-y-4">
             <PhaseStoryBook
               currentPhaseIndex={currentPhaseIndex}
-              onSelectPhase={(idx) => setCurrentPhaseIndex(idx)}
+              onSelectPhase={handlePhaseChangeInternal}
               isGm={true}
             />
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { defaultScenario } from './data/defaultScenario';
 import { ScenarioData, CharacterData } from './types/scenario';
 import { CharacterSilhouette } from './components/CharacterSilhouette';
@@ -14,7 +14,10 @@ import {
   fetchLatestState,
   SERVER_SYNC_STATUS_EVENT,
   PHASE_VISIBILITY_EVENT,
+  CURRENT_PHASE_INDEX_EVENT,
   getStoredPhaseVisibility,
+  getStoredCurrentPhaseIndex,
+  unlockUpToPhaseIndex,
   PhaseVisibilityMap,
 } from './utils/phaseStorage';
 import {
@@ -45,6 +48,7 @@ import {
   Swords,
   Award,
   Scale,
+  Tag,
 } from 'lucide-react';
 
 interface ClueItem {
@@ -145,16 +149,36 @@ export default function App() {
   // Current view: 'cover' (신문 호외 대문), 'player' (탐정 수사 화면), 'gm' (GM 콘솔)
   const [currentView, setCurrentView] = useState<'cover' | 'player' | 'gm'>('cover');
 
-  // Player tabs: 'phases' (14단계 스토리 & 룰), 'characters' (6인 용의자), 'synopsis' (사건 개요), 'notebook' (수사 메모)
-  const [playerTab, setPlayerTab] = useState<'phases' | 'characters' | 'synopsis' | 'notebook'>('characters');
+  // Player tabs: 'characters' (6인 용의자), 'phases' (14단계 스토리 & 룰), 'synopsis' (사건 개요), 'notebook' (수사 메모)
+  const [playerTab, setPlayerTab] = useState<'characters' | 'phases' | 'synopsis' | 'notebook'>('characters');
 
-  // Scroll to top whenever view changes
+  // Ref to the top of 6인 용의자 & 밀서 section to guarantee landing at top
+  const charactersTopRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top whenever view or player tab changes
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [currentView]);
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      if (currentView === 'player' && playerTab === 'characters') {
+        charactersTopRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+      }
+    }, 25);
+    return () => clearTimeout(timer);
+  }, [currentView, playerTab]);
 
-  // Current game phase index (0 to 13)
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(0);
+  // Current game phase index (0 to 13) synced with storage and GM events
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState<number>(() => getStoredCurrentPhaseIndex());
+
+  useEffect(() => {
+    const handlePhaseIndexChange = (e: any) => {
+      if (typeof e.detail === 'number') {
+        setCurrentPhaseIndex(e.detail);
+      }
+    };
+    window.addEventListener(CURRENT_PHASE_INDEX_EVENT, handlePhaseIndexChange);
+    return () => window.removeEventListener(CURRENT_PHASE_INDEX_EVENT, handlePhaseIndexChange);
+  }, []);
 
   // Selected clue for inspection modal
   const [selectedClue, setSelectedClue] = useState<ClueItem | null>(null);
@@ -571,6 +595,18 @@ export default function App() {
               {/* Navigation Tabs (4 Tabs) */}
               <div className="flex flex-wrap gap-2 text-xs sm:text-sm font-semibold">
                 <button
+                  onClick={() => handleTabChange('characters')}
+                  className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+                    playerTab === 'characters'
+                      ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
+                      : 'border-[#5a483a] bg-[#140f0c] text-[#a89988] hover:text-[#f5ede1]'
+                  }`}
+                >
+                  <Users className="w-4 h-4 text-[#d4af37]" />
+                  <span>6인의 용의자 & 밀서 ({scenario.characters.length}명)</span>
+                </button>
+
+                <button
                   onClick={() => handleTabChange('phases')}
                   className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
                     playerTab === 'phases'
@@ -580,18 +616,6 @@ export default function App() {
                 >
                   <BookOpen className="w-4 h-4 text-[#d4af37]" />
                   <span>단계별 스토리 & 진행 (14단계)</span>
-                </button>
-
-                <button
-                  onClick={() => handleTabChange('characters')}
-                  className={`px-3.5 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
-                    playerTab === 'characters'
-                      ? 'border-[#b48c36] bg-[#8b261e] text-[#f5ede1] font-bold shadow-md'
-                      : 'border-[#5a483a] bg-[#140f0c] text-[#a89988] hover:text-[#f5ede1]'
-                  }`}
-                >
-                  <Users className="w-4 h-4" />
-                  <span>6인의 용의자 & 밀서 ({scenario.characters.length}명)</span>
                 </button>
 
                 <button
@@ -718,6 +742,54 @@ export default function App() {
                         <p className="text-[#c2b092]">화족(귀족)인 난조 가문의 서양자(데릴사위)가 되면서 후원을 얻어 정치가가 되었다.</p>
                       </div>
                     </div>
+
+                    {/* 5. 카드 왼쪽 위의 기술 (가와즈야의 단서 메모 기호) */}
+                    <div className="md:col-span-2 p-4 sm:p-5 bg-[#231b17] border-2 border-[#b48c36]/70 rounded-sm space-y-3 shadow-lg">
+                      <div className="flex items-center justify-between border-b border-[#b48c36]/40 pb-2.5 flex-wrap gap-2">
+                        <div className="flex items-center gap-2 text-[#d4af37]">
+                          <Tag className="w-4 h-4 shrink-0 text-[#d4af37]" />
+                          <h4 className="font-bold text-sm sm:text-base text-[#f5ede1] font-title">
+                            〈카드 왼쪽 위의 기술〉
+                          </h4>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 bg-[#800f13] text-[#fefae0] font-serif font-bold rounded-xs border border-[#d4af37] shadow-xs">
+                          가와즈야의 단서 메모 기호 해독
+                        </span>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-[#e0d6c5] leading-relaxed">
+                        카드 중에는, 왼쪽 위에 알파벳이 기재된 카드가 있습니다. 이 알파벳은 가와즈야가 남긴 메모이며, 아래와 같이, 관련된 사건을 나타내고 있습니다.
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                        <div className="p-3 bg-[#181210] border border-[#9b2226]/70 rounded-xs flex items-center gap-3 shadow-md">
+                          <span className="w-8 h-8 rounded-full bg-[#800f13] text-[#fefae0] font-bold text-sm font-serif flex items-center justify-center shrink-0 border border-[#d4af37] shadow-xs">
+                            K
+                          </span>
+                          <div className="text-xs sm:text-sm font-bold text-[#f5ede1] font-serif">
+                            K = 까마귀 사건
+                          </div>
+                        </div>
+
+                        <div className="p-3 bg-[#181210] border border-[#b48c36]/60 rounded-xs flex items-center gap-3 shadow-md">
+                          <span className="w-8 h-8 rounded-full bg-[#3a2c20] text-[#d4af37] font-bold text-sm font-serif flex items-center justify-center shrink-0 border border-[#b48c36] shadow-xs">
+                            R
+                          </span>
+                          <div className="text-xs sm:text-sm font-bold text-[#f5ede1] font-serif">
+                            R = 후시미 리쓰코 사건
+                          </div>
+                        </div>
+
+                        <div className="p-3 bg-[#181210] border border-[#457b9d]/70 rounded-xs flex items-center gap-3 shadow-md">
+                          <span className="w-8 h-8 rounded-full bg-[#1d3557] text-[#a8dadc] font-bold text-sm font-serif flex items-center justify-center shrink-0 border border-[#457b9d] shadow-xs">
+                            M
+                          </span>
+                          <div className="text-xs sm:text-sm font-bold text-[#f5ede1] font-serif">
+                            M = 오오기 마리코 사건
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -736,9 +808,10 @@ export default function App() {
               </div>
             )}
 
-            {/* TAB 2: CHARACTERS & SECRET DOSSIERS */}
+            {/* TAB 1: CHARACTERS & SECRET DOSSIERS (6인의 용의자 & 밀서) */}
             {playerTab === 'characters' && (
               <div className="space-y-6">
+                <div ref={charactersTopRef} id="characters-top" className="scroll-mt-6" />
                 <div className="p-3 bg-[#241c18] border border-[#b48c36]/40 rounded-sm text-xs text-[#d4af37] flex items-center justify-between">
                   <span>
                     💡 각자 배정받은 인물 카드의 <strong>[밀서 열람]</strong> 버튼을 누르고 비밀번호를 입력하십시오.
@@ -923,6 +996,12 @@ export default function App() {
             <GmConsole
               scenario={scenario}
               onUpdateScenario={handleUpdateScenario}
+              currentPhaseIndex={currentPhaseIndex}
+              onPhaseChange={(idx) => {
+                setCurrentPhaseIndex(idx);
+                const updated = unlockUpToPhaseIndex(idx);
+                setPhaseVisibility(updated);
+              }}
               onExit={() => {
                 setCurrentView('player');
                 setPlayerTab('characters');
@@ -1052,6 +1131,8 @@ export default function App() {
           character={selectedCharForSecret}
           isOpen={!!selectedCharForSecret}
           onClose={() => setSelectedCharForSecret(null)}
+          phaseVisibility={phaseVisibility}
+          currentPhaseIndex={currentPhaseIndex}
         />
       )}
 

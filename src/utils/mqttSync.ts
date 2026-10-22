@@ -3,7 +3,9 @@ import { GAME_PHASES } from '../data/phasesData';
 import {
   PhaseVisibilityMap,
   getStoredPhaseVisibility,
+  getStoredCurrentPhaseIndex,
   savePhaseVisibility,
+  saveStoredCurrentPhaseIndex,
   SERVER_SYNC_STATUS_EVENT,
 } from './phaseStorage';
 
@@ -137,7 +139,8 @@ export function initMqttCrossDeviceSync(): () => void {
 
       // If we are GM and already have local state, publish retained state on connect
       const localState = getStoredPhaseVisibility();
-      publishMqttPhaseVisibility(localState, false);
+      const localIndex = getStoredCurrentPhaseIndex();
+      publishMqttPhaseVisibility(localState, localIndex, false);
     });
 
     client.on('message', (topic, payload) => {
@@ -161,10 +164,14 @@ export function initMqttCrossDeviceSync(): () => void {
             }
           });
 
+          if (typeof parsed.currentPhaseIndex === 'number') {
+            saveStoredCurrentPhaseIndex(parsed.currentPhaseIndex, true);
+          }
+
           if (hasDiff) {
             console.log('[MQTT] Remote state received and applied:', merged);
             // Save locally without re-broadcasting
-            savePhaseVisibility(merged, false);
+            savePhaseVisibility(merged, false, typeof parsed.currentPhaseIndex === 'number' ? parsed.currentPhaseIndex : undefined);
             notifyRoomStatus(true);
           }
         }
@@ -213,12 +220,13 @@ export function initMqttCrossDeviceSync(): () => void {
  * Broadcast phase visibility update to cloud broker with retained: true
  * Retained: true guarantees any mobile phone connecting later receives it immediately!
  */
-export function publishMqttPhaseVisibility(map: PhaseVisibilityMap, force: boolean = true): void {
+export function publishMqttPhaseVisibility(map: PhaseVisibilityMap, currentPhaseIndex?: number, force: boolean = true): void {
   if (!client || !client.connected) return;
 
   const topic = getTopicForRoom(currentRoomId);
   const payload = JSON.stringify({
     phaseVisibility: map,
+    currentPhaseIndex: typeof currentPhaseIndex === 'number' ? currentPhaseIndex : 0,
     timestamp: Date.now(),
     roomId: currentRoomId,
   });

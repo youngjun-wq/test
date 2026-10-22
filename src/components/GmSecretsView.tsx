@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { CharacterData } from '../types/scenario';
 import { decryptAESGCM } from '../utils/crypto';
 import { CharacterSilhouette } from './CharacterSilhouette';
-import { KeyRound, ShieldAlert, Check, Copy, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { KeyRound, ShieldAlert, Check, Copy, ChevronDown, ChevronUp, Lock, Sparkles, BookOpen } from 'lucide-react';
 import { MarkdownViewer } from './MarkdownViewer';
+import { CHARACTER_PHASE_SECRETS } from '../data/characterPhaseSecrets';
+import { getStoredPhaseVisibility, PHASE_VISIBILITY_EVENT } from '../utils/phaseStorage';
 
 interface GmSecretsViewProps {
   characters: CharacterData[];
@@ -24,6 +26,20 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
   const [expandedId, setExpandedId] = useState<string | null>(characters[0]?.id || null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const [visibilityMap, setVisibilityMap] = useState<Record<string, boolean>>(() =>
+    getStoredPhaseVisibility()
+  );
+
+  useEffect(() => {
+    const handlePhaseChange = (e: any) => {
+      if (e.detail) {
+        setVisibilityMap(e.detail);
+      }
+    };
+    window.addEventListener(PHASE_VISIBILITY_EVENT, handlePhaseChange);
+    return () => window.removeEventListener(PHASE_VISIBILITY_EVENT, handlePhaseChange);
+  }, []);
 
   // Decrypt all character secrets for GM using gmPassword
   useEffect(() => {
@@ -174,8 +190,69 @@ export const GmSecretsView: React.FC<GmSecretsViewProps> = ({ characters, gmPass
                   </div>
 
                   {secret ? (
-                    <div className="p-4 bg-[#f6f1e5] text-[#1c1917] rounded-sm text-xs sm:text-sm font-sans leading-relaxed shadow-inner border border-[#b48c36]/40">
-                      <MarkdownViewer content={secret} />
+                    <div className="space-y-4">
+                      {/* Part 1: Base Secret */}
+                      <div className="p-4 bg-[#f6f1e5] text-[#1c1917] rounded-sm text-xs sm:text-sm font-sans leading-relaxed shadow-inner border border-[#b48c36]/40">
+                        <div className="font-bold text-xs text-[#800f13] mb-2 border-b border-[#b48c36]/30 pb-1 flex items-center gap-1 font-serif">
+                          <span>📜</span>
+                          <span>【제1부】 초기 설정서 극비 진실 (기본 밀서)</span>
+                        </div>
+                        <MarkdownViewer content={secret} />
+                      </div>
+
+                      {/* Part 2: Interlude Phase 2 */}
+                      {CHARACTER_PHASE_SECRETS[char.id] && (
+                        <div className="p-4 bg-[#fdf6e9] text-[#1c1917] rounded-sm text-xs sm:text-sm font-sans leading-relaxed shadow-inner border border-[#d4af37]">
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-1.5 border-b border-[#d4af37]/40">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-2 h-2 rounded-full ${visibilityMap['phase_5_interlude2'] ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400'}`} />
+                              <span className="font-bold text-xs text-[#800f13] font-serif">
+                                【제2부】 막간 페이즈 ② 추가 밀서 — {CHARACTER_PHASE_SECRETS[char.id].interlude2.phaseName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {CHARACTER_PHASE_SECRETS[char.id].interlude2.cardBadges.map((badge, bIdx) => (
+                                <span key={bIdx} className="text-[10px] px-1.5 py-0.2 bg-[#800f13] text-[#fefae0] font-bold font-serif rounded-xs border border-[#d4af37]">
+                                  🎴 {badge}
+                                </span>
+                              ))}
+                              <span className={`text-[10px] px-2 py-0.5 font-bold rounded-xs ${
+                                visibilityMap['phase_5_interlude2'] ? 'bg-emerald-900 text-emerald-100' : 'bg-neutral-800 text-neutral-400'
+                              }`}>
+                                {visibilityMap['phase_5_interlude2'] ? '탐정에게 공개 중 (ON)' : '탐정 화면 비공개 중 (OFF)'}
+                              </span>
+                            </div>
+                          </div>
+                          <MarkdownViewer content={CHARACTER_PHASE_SECRETS[char.id].interlude2.content} />
+                        </div>
+                      )}
+
+                      {/* Part 3: Interlude Phase 3 */}
+                      {CHARACTER_PHASE_SECRETS[char.id] && (
+                        <div className="p-4 bg-[#fcf0f1] text-[#1c1917] rounded-sm text-xs sm:text-sm font-sans leading-relaxed shadow-inner border border-[#9b2226]">
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-1.5 border-b border-[#9b2226]/40">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-2 h-2 rounded-full ${visibilityMap['phase_8_interlude3'] ? 'bg-[#9b2226] animate-ping' : 'bg-neutral-400'}`} />
+                              <span className="font-bold text-xs text-[#800f13] font-serif">
+                                【제3부】 막간 페이즈 ③ 추가 밀서 — {CHARACTER_PHASE_SECRETS[char.id].interlude3.phaseName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {CHARACTER_PHASE_SECRETS[char.id].interlude3.cardBadges.map((badge, bIdx) => (
+                                <span key={bIdx} className="text-[10px] px-1.5 py-0.2 bg-[#800f13] text-[#fefae0] font-bold font-serif rounded-xs border border-[#d4af37]">
+                                  🎴 {badge}
+                                </span>
+                              ))}
+                              <span className={`text-[10px] px-2 py-0.5 font-bold rounded-xs ${
+                                visibilityMap['phase_8_interlude3'] ? 'bg-[#800f13] text-[#fefae0]' : 'bg-neutral-800 text-neutral-400'
+                              }`}>
+                                {visibilityMap['phase_8_interlude3'] ? '탐정에게 공개 중 (ON)' : '탐정 화면 비공개 중 (OFF)'}
+                              </span>
+                            </div>
+                          </div>
+                          <MarkdownViewer content={CHARACTER_PHASE_SECRETS[char.id].interlude3.content} />
+                        </div>
+                      )}
                     </div>
                   ) : error ? (
                     <div className="p-3 bg-[#9b2226]/20 border border-[#9b2226] text-xs text-[#ff8fa3]">

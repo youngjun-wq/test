@@ -2,17 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { CharacterData } from '../types/scenario';
 import { decryptAESGCM } from '../utils/crypto';
 import { playSealBreakSound, playTypewriterJamSound } from '../utils/sound';
-import { Lock, Eye, EyeOff, ShieldAlert, X, Copy, Check, Sparkles } from 'lucide-react';
+import { Lock, Eye, EyeOff, ShieldAlert, X, Copy, Check, Sparkles, Unlock } from 'lucide-react';
 import { MarkdownViewer } from './MarkdownViewer';
 import { CharacterSilhouette } from './CharacterSilhouette';
+import { CHARACTER_PHASE_SECRETS } from '../data/characterPhaseSecrets';
+import { getStoredPhaseVisibility, getStoredCurrentPhaseIndex, PHASE_VISIBILITY_EVENT, CURRENT_PHASE_INDEX_EVENT } from '../utils/phaseStorage';
 
 interface SecretDossierModalProps {
   character: CharacterData;
   isOpen: boolean;
   onClose: () => void;
+  phaseVisibility?: Record<string, boolean>;
+  currentPhaseIndex?: number;
 }
 
-export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ character, isOpen, onClose }) => {
+export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({
+  character,
+  isOpen,
+  onClose,
+  phaseVisibility,
+  currentPhaseIndex,
+}) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [decryptedSecret, setDecryptedSecret] = useState<string | null>(null);
@@ -20,6 +30,51 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
   const [isCrackingSeal, setIsCrackingSeal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Dynamic phase progression tracking
+  const [localVisibility, setLocalVisibility] = useState<Record<string, boolean>>(() =>
+    phaseVisibility || getStoredPhaseVisibility()
+  );
+  const [localPhaseIndex, setLocalPhaseIndex] = useState<number>(() =>
+    currentPhaseIndex !== undefined ? currentPhaseIndex : getStoredCurrentPhaseIndex()
+  );
+
+  useEffect(() => {
+    if (phaseVisibility) {
+      setLocalVisibility(phaseVisibility);
+    }
+  }, [phaseVisibility]);
+
+  useEffect(() => {
+    if (typeof currentPhaseIndex === 'number') {
+      setLocalPhaseIndex(currentPhaseIndex);
+    }
+  }, [currentPhaseIndex]);
+
+  useEffect(() => {
+    const handlePhaseChange = (e: any) => {
+      if (e.detail) {
+        setLocalVisibility(e.detail);
+      }
+    };
+    const handlePhaseIndexChange = (e: any) => {
+      if (typeof e.detail === 'number') {
+        setLocalPhaseIndex(e.detail);
+      }
+    };
+    window.addEventListener(PHASE_VISIBILITY_EVENT, handlePhaseChange);
+    window.addEventListener(CURRENT_PHASE_INDEX_EVENT, handlePhaseIndexChange);
+    return () => {
+      window.removeEventListener(PHASE_VISIBILITY_EVENT, handlePhaseChange);
+      window.removeEventListener(CURRENT_PHASE_INDEX_EVENT, handlePhaseIndexChange);
+    };
+  }, []);
+
+  const activeVisibility = phaseVisibility || localVisibility;
+  const effectivePhaseIndex = currentPhaseIndex !== undefined ? currentPhaseIndex : localPhaseIndex;
+  const isInterlude2Open = !!activeVisibility['phase_5_interlude2'] || effectivePhaseIndex >= 5;
+  const isInterlude3Open = !!activeVisibility['phase_8_interlude3'] || effectivePhaseIndex >= 8;
+  const phaseSecrets = CHARACTER_PHASE_SECRETS[character.id];
 
   // Security: Auto-seal when window/tab blurs or phone screen turns off
   useEffect(() => {
@@ -99,11 +154,22 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
     onClose();
   };
 
-  const handleCopySecret = () => {
+  const handleCopySecret = async () => {
     if (!decryptedSecret) return;
-    navigator.clipboard.writeText(decryptedSecret);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    let fullText = `【${character.name} 극비 밀서】\n\n[제1부 초기 밀서]\n` + decryptedSecret;
+    if (phaseSecrets && isInterlude2Open) {
+      fullText += `\n\n[제2부 막간 페이즈 ② 추가 공개]\n` + phaseSecrets.interlude2.content;
+    }
+    if (phaseSecrets && isInterlude3Open) {
+      fullText += `\n\n[제3부 막간 페이즈 ③ 추가 공개]\n` + phaseSecrets.interlude3.content;
+    }
+    try {
+      await navigator.clipboard.writeText(fullText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+    }
   };
 
   return (
@@ -300,9 +366,98 @@ export const SecretDossierModal: React.FC<SecretDossierModalProps> = ({ characte
                   )}
                 </div>
 
-                {/* Secret Content with Rich Vintage Styling */}
-                <div className="text-sm leading-relaxed text-[#211d1a] font-sans font-normal">
-                  <MarkdownViewer content={decryptedSecret} />
+                {/* Tiered Secret Content with Incremental Phase Unsealing */}
+                <div className="space-y-6 text-sm leading-relaxed text-[#211d1a] font-sans font-normal">
+                  {/* Stage 1: Initial Base Secret Dossier */}
+                  <div className="bg-[#fcf8ef] p-4 sm:p-5 border border-[#b48c36]/40 shadow-xs rounded-xs">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#b48c36]/30 text-xs font-bold text-[#800f13] font-serif">
+                      <span>📜</span>
+                      <span>【제1부】 초기 개인 설정 및 극비 진실 (사건 착수 시점)</span>
+                    </div>
+                    <MarkdownViewer content={decryptedSecret} />
+                  </div>
+
+                  {/* Stage 2: Interlude Phase 2 Extra Secret */}
+                  {phaseSecrets && (
+                    <div className="transition-all duration-500">
+                      {isInterlude2Open ? (
+                        <div className="bg-[#fdf6e9] p-4 sm:p-5 border-2 border-[#d4af37] shadow-md rounded-xs animate-fade-in relative overflow-hidden">
+                          {/* Top Tag */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-[#d4af37]/50">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse" />
+                              <span className="font-bold text-sm text-[#800f13] font-serif">
+                                【제2부】 막간 페이즈 ② 추가 공개 — {phaseSecrets.interlude2.phaseName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {phaseSecrets.interlude2.cardBadges.map((badge, bIdx) => (
+                                <span key={bIdx} className="text-[10px] px-2 py-0.5 bg-[#800f13] text-[#fefae0] font-bold font-serif rounded-xs border border-[#d4af37] shadow-xs">
+                                  🎴 {badge}
+                                </span>
+                              ))}
+                              <span className="text-[11px] px-2 py-0.5 bg-emerald-900 text-emerald-100 font-bold font-sans rounded-xs">
+                                해금 완료
+                              </span>
+                            </div>
+                          </div>
+
+                          <MarkdownViewer content={phaseSecrets.interlude2.content} />
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-[#ede4d3]/70 border-2 border-dashed border-[#b48c36]/60 rounded-xs text-center font-serif shadow-xs">
+                          <div className="flex items-center justify-center gap-2 text-[#7a6a5d] text-xs sm:text-sm font-bold">
+                            <Lock className="w-4 h-4 text-[#8b261e]" />
+                            <span>[봉인 중] 막간 페이즈 ② 도달 시 가와즈야와의 추가 밀담이 공개됩니다</span>
+                          </div>
+                          <div className="text-[11px] text-[#998a7d] mt-1 font-sans">
+                            (GM 진행자가 순서를 막간 페이즈 ②로 진행하면 실시간으로 자동 개봉됩니다)
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Stage 3: Interlude Phase 3 Extra Secret */}
+                  {phaseSecrets && (
+                    <div className="transition-all duration-500">
+                      {isInterlude3Open ? (
+                        <div className="bg-[#fcf0f1] p-4 sm:p-5 border-2 border-[#9b2226] shadow-md rounded-xs animate-fade-in relative overflow-hidden">
+                          {/* Top Tag */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-[#9b2226]/40">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-[#9b2226] animate-ping" />
+                              <span className="font-bold text-sm text-[#800f13] font-serif">
+                                【제3부】 막간 페이즈 ③ 추가 공개 — {phaseSecrets.interlude3.phaseName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {phaseSecrets.interlude3.cardBadges.map((badge, bIdx) => (
+                                <span key={bIdx} className="text-[10px] px-2 py-0.5 bg-[#800f13] text-[#fefae0] font-bold font-serif rounded-xs border border-[#d4af37] shadow-xs">
+                                  🎴 {badge}
+                                </span>
+                              ))}
+                              <span className="text-[11px] px-2 py-0.5 bg-[#800f13] text-[#fefae0] font-bold font-sans rounded-xs shadow-xs">
+                                최종 목적 해금
+                              </span>
+                            </div>
+                          </div>
+
+                          <MarkdownViewer content={phaseSecrets.interlude3.content} />
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-[#ede4d3]/70 border-2 border-dashed border-[#9b2226]/40 rounded-xs text-center font-serif shadow-xs">
+                          <div className="flex items-center justify-center gap-2 text-[#7a6a5d] text-xs sm:text-sm font-bold">
+                            <Lock className="w-4 h-4 text-[#9b2226]" />
+                            <span>[봉인 중] 막간 페이즈 ③ 도달 시 사건 당일 자정 및 최종 목적이 공개됩니다</span>
+                          </div>
+                          <div className="text-[11px] text-[#998a7d] mt-1 font-sans">
+                            (GM 진행자가 순서를 막간 페이즈 ③으로 진행하면 실시간으로 자동 개봉됩니다)
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Signature / Date */}

@@ -6,6 +6,28 @@ export type PhaseVisibilityMap = Record<string, boolean>;
 const STORAGE_KEY = 'boardbang_phase_visibility_v1';
 export const PHASE_VISIBILITY_EVENT = 'boardbang_phase_visibility_change';
 export const SERVER_SYNC_STATUS_EVENT = 'boardbang_server_sync_status';
+export const CURRENT_PHASE_INDEX_EVENT = 'boardbang_current_phase_index_change';
+const CURRENT_PHASE_INDEX_KEY = 'boardbang_current_phase_index_v1';
+
+export function getStoredCurrentPhaseIndex(): number {
+  try {
+    const raw = localStorage.getItem(CURRENT_PHASE_INDEX_KEY);
+    if (!raw) return 0;
+    const num = parseInt(raw, 10);
+    return isNaN(num) ? 0 : num;
+  } catch {
+    return 0;
+  }
+}
+
+export function saveStoredCurrentPhaseIndex(index: number, broadcast: boolean = true): void {
+  try {
+    localStorage.setItem(CURRENT_PHASE_INDEX_KEY, String(index));
+    if (broadcast) {
+      window.dispatchEvent(new CustomEvent(CURRENT_PHASE_INDEX_EVENT, { detail: index }));
+    }
+  } catch {}
+}
 
 /**
  * Initial default unlocked phases:
@@ -66,15 +88,18 @@ export function getStoredPhaseVisibility(): PhaseVisibilityMap {
  * Save phase visibility state to localStorage, trigger local event,
  * and push to backend server for instant multi-device sync
  */
-export function savePhaseVisibility(map: PhaseVisibilityMap, broadcastToServer: boolean = true): void {
+export function savePhaseVisibility(map: PhaseVisibilityMap, broadcastToServer: boolean = true, phaseIndex?: number): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
     window.dispatchEvent(new CustomEvent(PHASE_VISIBILITY_EVENT, { detail: map }));
 
+    const currentIndex = phaseIndex !== undefined ? phaseIndex : getStoredCurrentPhaseIndex();
+    saveStoredCurrentPhaseIndex(currentIndex, false);
+
     if (broadcastToServer) {
       // 1. High-speed Cloud Broker Broadcast (bypasses container/proxy cookies)
       try {
-        publishMqttPhaseVisibility(map);
+        publishMqttPhaseVisibility(map, currentIndex);
       } catch (e) {
         console.warn('MQTT broadcast failed:', e);
       }
@@ -83,7 +108,7 @@ export function savePhaseVisibility(map: PhaseVisibilityMap, broadcastToServer: 
       fetch('/api/game-state/phase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phaseVisibility: map }),
+        body: JSON.stringify({ phaseVisibility: map, currentPhaseIndex: currentIndex }),
       }).catch((err) => {
         console.warn('Failed to broadcast phase lock to server:', err);
       });
@@ -106,7 +131,8 @@ export function unlockUpToPhaseIndex(index: number): PhaseVisibilityMap {
     }
   });
 
-  savePhaseVisibility(next, true);
+  saveStoredCurrentPhaseIndex(index, true);
+  savePhaseVisibility(next, true, index);
   return next;
 }
 
@@ -203,6 +229,9 @@ export async function fetchLatestState(): Promise<boolean> {
     const data = await res.json();
     if (data?.phaseVisibility) {
       applyRemoteState(data.phaseVisibility);
+      if (typeof data.currentPhaseIndex === 'number') {
+        saveStoredCurrentPhaseIndex(data.currentPhaseIndex, true);
+      }
       window.dispatchEvent(
         new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'connected' } })
       );
@@ -253,6 +282,9 @@ export function initCrossDeviceSync(): () => void {
           const data = JSON.parse(event.data);
           if (data?.phaseVisibility) {
             applyRemoteState(data.phaseVisibility);
+            if (typeof data.currentPhaseIndex === 'number') {
+              saveStoredCurrentPhaseIndex(data.currentPhaseIndex, true);
+            }
             window.dispatchEvent(
               new CustomEvent(SERVER_SYNC_STATUS_EVENT, { detail: { connected: true, mode: 'realtime' } })
             );

@@ -191,6 +191,8 @@ export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 15, onPhaseCh
                 onClick={() => {
                   setCurrentPhase(idx);
                   onPhaseChange?.(idx);
+                  const updated = unlockUpToPhaseIndex(idx);
+                  setVisibilityMap(updated);
                   if (p.durationMinutes) {
                     handleSetDuration(p.durationMinutes);
                   }
@@ -234,6 +236,36 @@ export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 15, onPhaseCh
             playBrassChime();
           };
 
+          const handlePrevPhase = () => {
+            if (currentPhase > 0) {
+              const prevIdx = currentPhase - 1;
+              setCurrentPhase(prevIdx);
+              onPhaseChange?.(prevIdx);
+              const updated = unlockUpToPhaseIndex(prevIdx);
+              setVisibilityMap(updated);
+              const prevPhaseObj = GAME_PHASES[prevIdx];
+              if (prevPhaseObj.durationMinutes) {
+                handleSetDuration(prevPhaseObj.durationMinutes);
+              }
+              playBrassChime();
+            }
+          };
+
+          const handleNextPhase = () => {
+            if (currentPhase < GAME_PHASES.length - 1) {
+              const nextIdx = currentPhase + 1;
+              setCurrentPhase(nextIdx);
+              onPhaseChange?.(nextIdx);
+              const updated = unlockUpToPhaseIndex(nextIdx);
+              setVisibilityMap(updated);
+              const nextPhaseObj = GAME_PHASES[nextIdx];
+              if (nextPhaseObj.durationMinutes) {
+                handleSetDuration(nextPhaseObj.durationMinutes);
+              }
+              playBrassChime();
+            }
+          };
+
           return (
             <div className="mt-2 bg-[#171310] p-3 border border-[#b48c36]/40 rounded-xs flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -268,7 +300,27 @@ export const GmTimer: React.FC<GmTimerProps> = ({ initialMinutes = 15, onPhaseCh
               </div>
 
               {/* Action Buttons for this Phase */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handlePrevPhase}
+                  disabled={currentPhase <= 0}
+                  className="px-2 py-1 bg-[#1a1410] hover:bg-[#251e18] disabled:opacity-40 text-[#c2b092] border border-[#5a483a] rounded-xs text-xs font-semibold transition-colors cursor-pointer"
+                  title="이전 페이즈로 이동"
+                >
+                  ◀ 이전
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleNextPhase}
+                  disabled={currentPhase >= GAME_PHASES.length - 1}
+                  className="px-2.5 py-1 bg-gradient-to-r from-[#800f13] to-[#590d10] hover:brightness-110 disabled:opacity-40 text-[#f5ede1] border border-[#b48c36] rounded-xs text-xs font-bold transition-all shadow-sm cursor-pointer"
+                  title="다음 페이즈로 순서 진행 및 탐정 자동 해금"
+                >
+                  다음 페이즈 진행 ▶
+                </button>
+
                 <button
                   type="button"
                   onClick={handleUnlockUpToThis}
